@@ -261,5 +261,30 @@
         "name": "roomID"
       }
     ]
+  },
+
+
+  // 유닛 생성
+  "[MSG, C->S] Create Unit": {
+    "type": "message",
+    "name": "MSG_REQ_BATTLE_CRT_UNIT",
+    "field": [
+      {
+        "type": "uint16",
+        "name": "playerID"
+      },
+      {
+        "type": "uint16",
+        "name": "unitID"
+      },
+      {
+        "type": "uint16",
+        "name": "X"
+      },
+      {
+        "type": "uint16",
+        "name": "Y"
+      }
+    ]
   }
 }
