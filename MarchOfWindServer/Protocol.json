@@ -1,0 +1,265 @@
+{
+  "Data Type Mapping": {
+    "type": "dataTypeMapping",
+    "mapping": [
+      {
+        "dataType": "BYTE",
+        "C#": "byte"
+      },
+      {
+        "dataType": "WORD",
+        "C#": "ushort"
+      },
+      {
+        "dataType": "uint16",
+        "C#": "ushort"
+      },
+      {
+        "dataType": "int",
+        "C++": "INT"
+      }
+    ]
+  },
+
+  "Message default field format": {
+    "type": "messageFormat",
+    "field": [
+      {
+        "type": "WORD",
+        "name": "type"
+      }
+    ]
+  },
+
+
+  "[enum, S<->C] Packet Type": {
+    "type": "enum",
+    "name": "enPacketType",
+    "field": [
+      "COM_REQUSET",
+      "COM_REPLY",
+
+      "REQ_SET_PLAYER_NAME",
+
+      "REQ_MAKE_MATCH_ROOM",
+      "FWD_REGIST_MATCH_ROOM",
+      "RES_QUERY_PLAYER_LIST",
+
+      "RES_QUERY_MATCH_ROOM_LIST",
+
+      "REQ_JOIN_MATCH_ROOM"
+    ]
+  },
+
+  "[enum, C->S], Commom Requset Message Type": {
+    "type": "enum",
+    "name": "enProtocolComRequest",
+    "field": [
+      "REQ_PLAYER_LIST",
+      "REQ_MATCH_ROOM_LIST",
+
+      "REQ_ENTER_MATCH_ROOM",
+      "REQ_QUIT_MATCH_ROOM"
+    ]
+  },
+
+  "[enum, S->C], Commom Reply Message Type": {
+    "type": "enum",
+    "name": "enProtocolComReply",
+    "field": [
+      "SET_PLAYER_NAME_SUCCESS",
+      "SET_PLAYER_NAME_FAIL",
+      "MAKE_MATCH_ROOM_SUCCESS",
+      "MAKE_MATCH_ROOM_FAIL",
+      "JOIN_MATCH_ROOM_SUCCESS",
+      "JOIN_MATCH_ROOM_FAIL",
+      "ENTER_MATCH_ROOM_SUCCESS",
+      "ENTER_MATCH_ROOM_FAIL",
+      "QUIT_MATCH_ROOM_SUCCESS",
+      "QUIT_MATCH_ROOM_FAIL"
+    ]
+  },
+
+  "[enum] Player Type in Match Room": {
+    "type": "enum",
+    "name": "enPlayerTypeInMatchRoom",
+    "field": [
+      "Manager",
+      "Guest"
+    ]
+  },
+
+  "[const] Protocol Constant": {
+    "type": "constant",
+    "group": "PROTOCOL_CONSTANT",
+    "constant": [
+      {
+        "name": "MAX_OF_PLAYER_NAME_LEN",
+        "value": 32
+      },
+      {
+        "name": "MAX_OF_ROOM_NAME_LEN",
+        "value": 50
+      },
+      {
+        "name": "END_OF_LIST",
+        "value": 255
+      },
+      {
+        "name": "MAX_OF_PLAYER_IN_ROOM",
+        "value": 4
+      },
+      {
+        "name": "MAX_OF_MATCH_ROOM",
+        "value": 100
+      }
+    ]
+  },
+
+  "[MSG, C->S] Common Request": {
+    "type": "message",
+    "name": "MSG_COM_REQUEST",
+    "field": [
+      {
+        "type": "uint16",
+        "name": "requestCode"
+      }
+    ]
+  },
+  "[MSG, S->C] Common Reply": {
+    "type": "message",
+    "name": "MSG_COM_REPLY",
+    "field": [
+      {
+        "type": "uint16",
+        "name": "replyCode"
+      }
+    ]
+  },
+
+  "[MSG, C->S] Request Set Player name and Connect": {
+    "type": "message",
+    "name": "MSG_REQ_SET_PLAYER_NAME",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_PLAYER_NAME_LEN"
+        ],
+        "name": "playerName"
+      },
+      {
+        "type": "int",
+        "name": "playerNameLen"
+      }
+    ]
+  },
+
+  "[MSG, C->S] Request Make Match Room": {
+    "type": "message",
+    "name": "MSG_REQ_MAKE_ROOM",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_ROOM_NAME_LEN"
+        ],
+        "name": "roomName"
+      },
+      {
+        "type": "int",
+        "name": "roomNameLen"
+      }
+    ]
+  },
+
+  "[MSG, G->G] Regist Player To Match room": {
+    "type": "message",
+    "name": "MSG_REGIST_ROOM",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_PLAYER_NAME_LEN"
+        ],
+        "name": "playerName"
+      },
+      {
+        "type": "int",
+        "name": "playerNameLen"
+      },
+      {
+        "type": "BYTE",
+        "name": "playerType"
+      }
+    ]
+  },
+
+  "[MSG, S->C] Reply Query Player List": {
+    "type": "message",
+    "name": "MSG_RES_QUERY_PLAYER_LIST",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_PLAYER_NAME_LEN"
+        ],
+        "name": "playerName"
+      },
+      {
+        "type": "int",
+        "name": "playerNameLen"
+      },
+      {
+        "type": "BYTE",
+        "name": "playerType"
+      },
+      {
+        "type": "BYTE",
+        "name": "order"
+      }
+    ]
+  },
+
+  "[MSG, S->C] Reply Query Match room List": {
+    "type": "message",
+    "name": "MSG_RES_QUERY_ROOM_LIST",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_ROOM_NAME_LEN"
+        ],
+        "name": "roomName"
+      },
+      {
+        "type": "int",
+        "name": "roomNameLen"
+      },
+      {
+        "type": "uint16",
+        "name": "roomID"
+      },
+      {
+        "type": "BYTE",
+        "name": "order"
+      }
+    ]
+  },
+
+  "[MSG, C->S] Request Join Match Room": {
+    "type": "message",
+    "name": "MSG_REQ_JOIN_ROOM",
+    "field": [
+      {
+        "type": "uint16",
+        "name": "roomID"
+      }
+    ]
+  }
+}
