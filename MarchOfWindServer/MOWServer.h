@@ -3,6 +3,7 @@
 #include "JNetCore.h"
 
 #include "Group.h"
+#include "GatewayThread.h"
 #include "LobbyThread.h"
 
 using namespace jnet;
@@ -41,8 +42,8 @@ public:
 			return false;
 		}
 
-		JNetGroupThread* lobbyThread = new LobbyThread();
-		CreateGroup(LOBBY_GROUP, lobbyThread);
+		CreateGroup(GATEWAY_GROUP, new GatewayThread());
+		CreateGroup(LOBBY_GROUP, new LobbyThread());
 	}
 
 private:

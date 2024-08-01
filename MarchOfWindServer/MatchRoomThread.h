@@ -27,10 +27,13 @@ private:
 
 private:
 	void Proc_RegistPlayer(SessionID64 sessionID, MSG_REGIST_ROOM& msg);
-	void SendPlayerList(SessionID64 sessionID);
 
 	void Proc_PlayerEnter(SessionID64 sessionID);
 	void Proc_PlayerQuit(SessionID64 sessionID);
 
+	void Proc_GameStart();
+
+	void SendPlayerList(SessionID64 sessionID);
+	void BroadcastReadyToStart();
 };
 

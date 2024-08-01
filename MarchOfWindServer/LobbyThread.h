@@ -50,9 +50,11 @@ private:
 	virtual void OnMessage(SessionID64 sessionID, JBuffer& recvData) override;
 
 private:
-	void Proc_SetPlayerName(SessionID64 sessionID, MSG_REQ_SET_PLAYER_NAME& msg);
-	void Proc_MakeRoom(SessionID64 sessionID, MSG_REQ_MAKE_ROOM& msg);
-	void Proc_QueryRoomLists(SessionID64 sessionID);
-	void Proc_JoinRoom(SessionID64 sessionID, MSG_REQ_JOIN_ROOM& msg);
+	bool Proc_SetPlayerName(SessionID64 sessionID, MSG_REQ_SET_PLAYER_NAME& msg);
+	bool Proc_MakeRoom(SessionID64 sessionID, MSG_REQ_MAKE_ROOM& msg);
+	//void Proc_QueryRoomLists(SessionID64 sessionID);
+
+	bool Proc_EnterMatchLobby(SessionID64 sessionID);
+	bool Proc_JoinRoom(SessionID64 sessionID, MSG_REQ_JOIN_ROOM& msg);
 };
 

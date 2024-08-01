@@ -1,4 +1,6 @@
 {
+  "TEMP": null,
+
   "Data Type Mapping": {
     "type": "dataTypeMapping",
     "mapping": [
@@ -13,6 +15,10 @@
       {
         "dataType": "uint16",
         "C#": "ushort"
+      },
+      {
+        "dataType": "uint64",
+        "C#": "UInt64"
       },
       {
         "dataType": "int",
@@ -43,11 +49,38 @@
 
       "REQ_MAKE_MATCH_ROOM",
       "FWD_REGIST_MATCH_ROOM",
-      "RES_QUERY_PLAYER_LIST",
 
-      "RES_QUERY_MATCH_ROOM_LIST",
+      "SERVE_PLAYER_LIST",
 
-      "REQ_JOIN_MATCH_ROOM"
+      "SERVE_READY_TO_START",
+
+      "FWD_PLAYER_INFO_TO_BATTLE_THREAD",
+      "SERVE_BATTLE_START",
+
+      "SERVE_MATCH_ROOM_LIST",
+
+      "REQ_JOIN_MATCH_ROOM",
+
+      "REPLY_NUM_OF_SELECTORS",
+
+      "REPLY_ENTER_TO_SELECT_FIELD",
+
+      "UNIT_S_CONN_BATTLE_FIELD",
+
+      "UNIT_S_CREATE_UNIT",
+      "S_MGR_CREATE_UNIT",
+
+      "UNIT_S_MOVE",
+      "S_MGR_MOVE",
+
+      "UNIT_S_ATTACK",
+      "S_MGR_ATTACK",
+      "UNIT_S_ATTACK_STOP",
+      "S_MGR_ATTACK_STOP",
+
+      "S_MGR_UINT_DAMAGED",
+
+      "S_MGR_UNIT_DIED"
     ]
   },
 
@@ -55,11 +88,20 @@
     "type": "enum",
     "name": "enProtocolComRequest",
     "field": [
-      "REQ_PLAYER_LIST",
-      "REQ_MATCH_ROOM_LIST",
-
+      "REQ_ENTER_MATCH_LOBBY",
       "REQ_ENTER_MATCH_ROOM",
-      "REQ_QUIT_MATCH_ROOM"
+      "REQ_QUIT_MATCH_ROOM",
+
+      "REQ_GAME_START",
+
+      "REQ_ENTER_TO_SELECT_FIELD",
+      "REQ_ENTER_TO_BATTLE_FIELD",
+      "REQ_EXIT_FROM_BATTLE_FIELD",
+
+      "REQ_NUM_OF_SELECTORS",
+
+      "REQ_MOVE_SELECT_FIELD_TO_BATTLE_FIELD",
+      "REQ_MOVE_BATTLE_FIELD_TO_SELECT_FIELD"
     ]
   },
 
@@ -71,12 +113,19 @@
       "SET_PLAYER_NAME_FAIL",
       "MAKE_MATCH_ROOM_SUCCESS",
       "MAKE_MATCH_ROOM_FAIL",
+
+      "ENTER_MATCH_LOBBY_SUCCESS",
+      "ENTER_MATCH_LOBBY_FAIL",
+
       "JOIN_MATCH_ROOM_SUCCESS",
       "JOIN_MATCH_ROOM_FAIL",
+
       "ENTER_MATCH_ROOM_SUCCESS",
       "ENTER_MATCH_ROOM_FAIL",
       "QUIT_MATCH_ROOM_SUCCESS",
-      "QUIT_MATCH_ROOM_FAIL"
+      "QUIT_MATCH_ROOM_FAIL",
+
+      "REPLY_MOVE_BATTLE_FIELD_TO_SELECT_FIELD"
     ]
   },
 
@@ -86,6 +135,70 @@
     "field": [
       "Manager",
       "Guest"
+    ]
+  },
+
+  "[enum] Ready To start code": {
+    "type": "enum",
+    "name": "enReadyToStartCode",
+    "field": [
+      "Ready",
+      "ReadToStart"
+    ]
+  },
+
+  "[enum] Player Team in Battle Field": {
+    "type": "enum",
+    "name": "enPlayerTeamInBattleField",
+    "field": [
+      "Team_A",
+      "Team_B",
+      "Team_C",
+      "Team_D",
+
+      "Team_Test"
+    ]
+  },
+
+  "[enum] Secene ID": {
+    "type": "enum",
+    "name": "enSceneID",
+    "field": [
+      "SelectField",
+      "BattleField"
+    ]
+  },
+
+  "[enum] Unit Type": {
+    "type": "enum",
+    "name": "enUnitType",
+    "field": [
+      "Terran_Marine",
+      "Terran_Firebat",
+      "Terran_Tank",
+      "Terran_Robocop",
+      "Zerg_Zergling",
+      "Zerg_Hydra",
+      "Zerg_Golem",
+      "Zerg_Tarantula"
+    ]
+  },
+
+  "[enum] Unit Move Type": {
+    "type": "enum",
+    "name": "enUnitMoveType",
+    "field": [
+      "Move_Start",
+      "Move_Change_Dir",
+      "Move_Stop"
+    ]
+  },
+
+  "[enum] Unit Attack Type": {
+    "type": "enum",
+    "name": "enUnitAttackType",
+    "field": [
+      "ATTACK_NORMAL"
     ]
   },
 
@@ -156,6 +269,9 @@
     ]
   },
 
+  "[REPLY] SET_PLAYER_NAME_SUCCESS/FAIL": {},
+
+
   "[MSG, C->S] Request Make Match Room": {
     "type": "message",
     "name": "MSG_REQ_MAKE_ROOM",
@@ -174,6 +290,12 @@
       }
     ]
   },
+
+  "[REPLY] MAKE_MATCH_ROOM_SUCCESS/FAIL": null,
+
+  "[REQ] REQ_ENTER_MATCH_ROOM": null,
+  "[REPLY] ENTER_MATCH_ROOM_SUCCESS/FAIL": null,
+
 
   "[MSG, G->G] Regist Player To Match room": {
     "type": "message",
@@ -198,9 +320,9 @@
     ]
   },
 
-  "[MSG, S->C] Reply Query Player List": {
+  "[MSG, S->C] Serve Player List": {
     "type": "message",
-    "name": "MSG_RES_QUERY_PLAYER_LIST",
+    "name": "MSG_SERVE_PLAYER_LIST",
     "field": [
       {
         "type": "char",
@@ -215,6 +337,10 @@
         "name": "playerNameLen"
       },
       {
+        "type": "uint16",
+        "name": "playerID"
+      },
+      {
         "type": "BYTE",
         "name": "playerType"
       },
@@ -225,9 +351,64 @@
     ]
   },
 
-  "[MSG, S->C] Reply Query Match room List": {
+  "[MSG, S->C] Serve Ready to start": {
     "type": "message",
-    "name": "MSG_RES_QUERY_ROOM_LIST",
+    "name": "MSG_SERVE_READY_TO_START",
+    "field": [
+      {
+        "type": "uint16",
+        "name": "code"
+      },
+      {
+        "type": "uint16",
+        "name": "playerID"
+      }
+    ]
+  },
+
+  "[REQ] GAME START": null,
+
+  "[MSG, G->G] foward playerInfo(id, team)": {
+    "type": "message",
+    "name": "MSG_FWD_PLAYER_INFO",
+    "field": [
+      {
+        "type": "char",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_PLAYER_NAME_LEN"
+        ],
+        "name": "playerName"
+      },
+      {
+        "type": "int",
+        "name": "playerNameLen"
+      },
+      {
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "int",
+        "name": "numOfTotalPlayers"
+      }
+    ]
+  },
+
+  "[MSG, S->C] Serve Battle Start": {
+    "type": "message",
+    "name": "MSG_SERVE_BATTLE_START",
+    "field": [
+      {
+        "type": "BYTE",
+        "name": "Team"
+      }
+    ]
+  },
+
+  "[MSG, S->C] Serve Match room List": {
+    "type": "message",
+    "name": "MSG_SERVE_ROOM_LIST",
     "field": [
       {
         "type": "char",
@@ -263,27 +444,365 @@
     ]
   },
 
+  "[REPLY] JOIN_MATCH_ROOM_SUCCESS/FAIL": {},
 
-  // 유닛 생성
-  "[MSG, C->S] Create Unit": {
+  "[REQ] ENTER_SELECT_FIELD": null,
+  "[MSG S->MGR] OK, COME in Select Field": {
     "type": "message",
-    "name": "MSG_REQ_BATTLE_CRT_UNIT",
+    "name": "MSG_REPLY_ENTER_TO_SELECT_FIELD",
     "field": [
       {
-        "type": "uint16",
-        "name": "playerID"
+        "type": "int",
+        "name": "fieldID"
+      }
+    ]
+  },
+
+  "[REQ] ENTER_BATTLE_FIELD": null,
+  "[REPLY] ENTER_BATTLE_FIELD": null,
+  "[REQ] EXIT_FROM_BATTLE_FIELD": null,
+  "[REPLY] EXIT_FROM_BATTLE_FIELD": null,
+
+  "[REQ] NUM_OF_SELECTORS": null,
+  "[MSG S->C] NUM_OF_SELECTORS": {
+    "type": "message",
+    "name": "MSG_REPLY_NUM_OF_SELECTORS",
+    "field": [
+      {
+        "type": "int",
+        "name": "numOfSelector"
+      }
+    ]
+  },
+
+  "[REQ] SELECT_FIELD_TO_BATTLE_FIELD": null,
+  "[REQ] BATTLE_FIELD_TO_SELECT_FIELD": null,
+
+  "UNIT_S_CONN_BATTLE_FIELD": {
+    "type": "message",
+    "name": "MSG_UNIT_S_CONN_BATTLE_FIELD",
+    "field": [
+      {
+        "type": "int",
+        "name": "fieldID"
+      }
+    ]
+  },
+
+  "UNIT_S_CREATE_UNIT": {
+    "type": "message",
+    "name": "MSG_UNIT_S_CREATE_UNIT",
+    "field": [
+      {
+        "type": "int",
+        "name": "crtCode"
       },
       {
-        "type": "uint16",
+        "type": "int",
+        "name": "unitType"
+      },
+      {
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      }
+    ]
+  },
+
+  "S_MGR_CREATE_UNIT": {
+    "type": "message",
+    "name": "MSG_S_MGR_CREATE_UNIT",
+    "field": [
+      {
+        "type": "int",
+        "name": "crtCode"
+      },
+      {
+        "type": "int",
         "name": "unitID"
       },
       {
-        "type": "uint16",
-        "name": "X"
+        "type": "int",
+        "name": "unitType"
       },
       {
-        "type": "uint16",
-        "name": "Y"
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "float",
+        "name": "speed"
+      },
+      {
+        "type": "int",
+        "name": "maxHP"
+      },
+      {
+        "type": "float",
+        "name": "attackDistance"
+      },
+      {
+        "type": "float",
+        "name": "attackRate"
+      }
+    ]
+  },
+
+  "UNIT_S_MOVE": {
+    "type": "message",
+    "name": "MSG_UNIT_S_MOVE",
+    "field": [
+      {
+        "type": "BYTE",
+        "name": "moveType"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "float",
+        "name": "destX"
+      },
+      {
+        "type": "float",
+        "name": "destZ"
+      }
+    ]
+  },
+
+  "S_MGR_MOVE": {
+    "type": "message",
+    "name": "MSG_S_MGR_MOVE",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "BYTE",
+        "name": "moveType"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "float",
+        "name": "speed"
+      },
+      {
+        "type": "float",
+        "name": "destX"
+      },
+      {
+        "type": "float",
+        "name": "destZ"
+      }
+    ]
+  },
+
+  "UNIT_S_ATTACK": {
+    "type": "message",
+    "name": "MSG_UNIT_S_ATTACK",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "int",
+        "name": "targetID"
+      },
+      {
+        "type": "int",
+        "name": "attackType"
+      }
+    ]
+  },
+
+  "S_MGR_ATTACK": {
+    "type": "message",
+    "name": "MSG_S_MGR_ATTACK",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "int",
+        "name": "targetID"
+      },
+      {
+        "type": "int",
+        "name": "attackType"
+      }
+    ]
+  },
+
+  "UNIT_S_ATTACK_STOP": {
+    "type": "message",
+    "name": "MSG_UNIT_S_ATTACK_STOP",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      }
+    ]
+  },
+
+  "S_MGR_ATTACK_STOP": {
+    "type": "message",
+    "name": "MSG_S_MGR_ATTACK_STOP",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      }
+    ]
+  },
+
+  "S_MGR_UINT_DAMAGED": {
+    "type": "message",
+    "name": "MSG_S_MGR_UINT_DAMAGED",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "renewHP"
+      }
+    ]
+  },
+
+  "S_MGR_UNIT_DIED": {
+    "type": "message",
+    "name": "MSG_S_MGR_UNIT_DIED",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
       }
     ]
   }

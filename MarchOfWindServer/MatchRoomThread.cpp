@@ -1,5 +1,6 @@
 #include "MatchRoomThread.h"
 #include "Configuration.h"
+#include "BattleThread.h"
 
 void MatchRoomThread::OnEnterClient(SessionID64 sessionID)
 {
@@ -49,6 +50,9 @@ void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			if (msg.requestCode == enProtocolComRequest::REQ_ENTER_MATCH_ROOM) {
 				Proc_PlayerEnter(sessionID);
 			}
+			else if (msg.requestCode == enProtocolComRequest::REQ_GAME_START) {
+				Proc_GameStart();
+			}
 			break;
 		}
 		case enPacketType::FWD_REGIST_MATCH_ROOM:
@@ -97,34 +101,6 @@ void MatchRoomThread::Proc_RegistPlayer(SessionID64 sessionID, MSG_REGIST_ROOM& 
 	}
 }
 
-void MatchRoomThread::SendPlayerList(SessionID64 sessionID)
-{	
-	BYTE idx = 0;
-	for (const auto& playerInfo : m_PlayerInfoList) {
-		JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_RES_QUERY_PLAYER_LIST));
-		MSG_RES_QUERY_PLAYER_LIST* body = reply->DirectReserve<MSG_RES_QUERY_PLAYER_LIST>();
-		body->type = enPacketType::RES_QUERY_PLAYER_LIST;
-		
-		memcpy(body->playerName, playerInfo.second.playerName.c_str(), playerInfo.second.playerName.length());
-		body->playerNameLen = playerInfo.second.playerName.length();
-		body->playerType = playerInfo.second.playerType;
-		body->order = idx++;
-
-		if (!SendPacket(sessionID, reply)) {
-			FreeSerialBuff(reply);
-		}
-	}
-
-	JBuffer* resEndBuff = AllocSerialSendBuff(sizeof(MSG_RES_QUERY_PLAYER_LIST));
-	MSG_RES_QUERY_PLAYER_LIST* resEndMsg = resEndBuff->DirectReserve<MSG_RES_QUERY_PLAYER_LIST>();
-	resEndMsg->type = enPacketType::RES_QUERY_PLAYER_LIST;
-	resEndMsg->order = PROTOCOL_CONSTANT::END_OF_LIST;
-	if (!SendPacket(sessionID, resEndBuff)) {
-		FreeSerialBuff(resEndBuff);
-	}
-
-}
-
 void MatchRoomThread::Proc_PlayerEnter(SessionID64 sessionID)
 {
 	bool success = false;
@@ -153,6 +129,9 @@ void MatchRoomThread::Proc_PlayerEnter(SessionID64 sessionID)
 		for (auto player : m_PlayerInfoList) {
 			SendPlayerList(player.first);
 		}
+
+		// TEST
+		BroadcastReadyToStart();
 	}
 	else {
 		DebugBreak();
@@ -162,4 +141,72 @@ void MatchRoomThread::Proc_PlayerEnter(SessionID64 sessionID)
 
 void MatchRoomThread::Proc_PlayerQuit(SessionID64 sessionID)
 {
+}
+
+void MatchRoomThread::Proc_GameStart()
+{
+	static int battlefieldIdx = 3000;
+
+	// battle field thread »ý¼º
+	int battleFieldID = battlefieldIdx++;
+	BattleThread* battleThread = new BattleThread();
+	CreateGroup(battleFieldID, battleThread);
+
+	int teamIdx = 0;
+	for (const auto& playerInfo : m_PlayerInfoList) {
+		ForwardSessionToGroup(playerInfo.first, battleFieldID);
+
+		JBuffer* fwd = AllocSerialBuff();
+		MSG_FWD_PLAYER_INFO* fwdbody = fwd->DirectReserve<MSG_FWD_PLAYER_INFO>();
+		fwdbody->type = enPacketType::FWD_PLAYER_INFO_TO_BATTLE_THREAD;
+		memcpy(fwdbody->playerName, playerInfo.second.playerName.c_str(), playerInfo.second.playerName.length());
+		fwdbody->playerNameLen = playerInfo.second.playerName.length();
+		fwdbody->team = teamIdx;
+		fwdbody->numOfTotalPlayers = m_PlayerInfoList.size();
+		SendMessageGroupToGroup(playerInfo.first, fwd);
+
+		JBuffer* serve = AllocSerialSendBuff(sizeof(MSG_SERVE_BATTLE_START));
+		MSG_SERVE_BATTLE_START* body = serve->DirectReserve<MSG_SERVE_BATTLE_START>();
+		body->type = enPacketType::SERVE_BATTLE_START;
+		body->Team = teamIdx;
+
+		if (!SendPacket(playerInfo.first, serve)) {
+			FreeSerialBuff(serve);
+		}
+
+		teamIdx++;
+	}
+}
+
+void MatchRoomThread::SendPlayerList(SessionID64 sessionID)
+{
+	BYTE idx = 0;
+	for (const auto& playerInfo : m_PlayerInfoList) {
+		JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_SERVE_PLAYER_LIST));
+		MSG_SERVE_PLAYER_LIST* body = reply->DirectReserve<MSG_SERVE_PLAYER_LIST>();
+		body->type = enPacketType::SERVE_PLAYER_LIST;
+
+		memcpy(body->playerName, playerInfo.second.playerName.c_str(), playerInfo.second.playerName.length());
+		body->playerNameLen = playerInfo.second.playerName.length();
+		body->playerType = playerInfo.second.playerType;
+		body->order = idx++;
+
+		if (!SendPacket(sessionID, reply)) {
+			FreeSerialBuff(reply);
+		}
+	}
+}
+
+void MatchRoomThread::BroadcastReadyToStart()
+{
+	for (const auto& playerInfo : m_PlayerInfoList) {
+		JBuffer* serveMsg = AllocSerialSendBuff(sizeof(MSG_SERVE_READY_TO_START));
+		MSG_SERVE_READY_TO_START* body = serveMsg->DirectReserve<MSG_SERVE_READY_TO_START>();
+		body->type = enPacketType::SERVE_READY_TO_START;
+		body->code = enReadyToStartCode::ReadToStart;
+
+		if (!SendPacket(playerInfo.first, serveMsg)) {
+			FreeSerialBuff(serveMsg);
+		}
+	}
 }

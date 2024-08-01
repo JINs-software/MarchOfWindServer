@@ -7,12 +7,17 @@
     <ClInclude Include="Group.h" />
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="Configuration.h" />
+    <ClInclude Include="BattleThread.h" />
+    <ClInclude Include="GatewayThread.h" />
+    <ClInclude Include="GameStaticData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MOWServer.cpp" />
     <ClCompile Include="LobbyThread.cpp" />
     <ClCompile Include="MatchRoomThread.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="BattleThread.cpp" />
+    <ClCompile Include="GatewayThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Protocol.json" />

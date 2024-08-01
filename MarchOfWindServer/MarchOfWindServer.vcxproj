@@ -128,11 +128,14 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\..\0. Utility\RingBuffer\lib\$(Configuration)\RingBuffer.lib;$(SolutionDir)..\..\0. Utility\JNetLibrary\lib\$(Configuration)\JNetLibrary.lib;$(SolutionDir)..\..\0. Utility\CLanLibrary\lib\$(Configuration)\JClient.lib;$(SolutionDir)..\..\0. Utility\LockFree\lib\$(Configuration)\LockFreeMemoryPool.lib;$(SolutionDir)..\..\0. Utility\PerformanceCounter\lib\$(Configuration)\PerformanceCounter.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\..\0. Utility\RingBuffer\lib\$(Configuration)\RingBuffer.lib;$(SolutionDir)..\..\0. Utility\JNetLibrary\lib\$(Configuration)\JNetLibrary.lib;$(SolutionDir)..\..\0. Utility\LockFree\lib\$(Configuration)\LockFreeMemoryPool.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BattleThread.h" />
     <ClInclude Include="Configuration.h" />
+    <ClInclude Include="GameStaticData.h" />
+    <ClInclude Include="GatewayThread.h" />
     <ClInclude Include="Group.h" />
     <ClInclude Include="LobbyThread.h" />
     <ClInclude Include="MatchRoomThread.h" />
@@ -140,6 +143,8 @@
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BattleThread.cpp" />
+    <ClCompile Include="GatewayThread.cpp" />
     <ClCompile Include="LobbyThread.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MatchRoomThread.cpp" />
