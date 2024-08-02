@@ -36,6 +36,7 @@ enum enPacketType
 	S_MGR_ATTACK_STOP,
 	S_MGR_UINT_DAMAGED,
 	S_MGR_UNIT_DIED,
+	MGR_UNIT_DIE_REQUEST,
 };
 
 enum enProtocolComRequest
@@ -248,6 +249,7 @@ struct MSG_S_MGR_CREATE_UNIT
 	INT maxHP;
 	float attackDistance;
 	float attackRate;
+	float attackDelay;
 };
 
 struct MSG_UNIT_S_MOVE
@@ -328,6 +330,12 @@ struct MSG_S_MGR_UINT_DAMAGED
 };
 
 struct MSG_S_MGR_UNIT_DIED
+{
+	WORD type;
+	INT unitID;
+};
+
+struct MSG_MGR_UNIT_DIE_REQUEST
 {
 	WORD type;
 	INT unitID;

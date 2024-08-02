@@ -80,7 +80,9 @@
 
       "S_MGR_UINT_DAMAGED",
 
-      "S_MGR_UNIT_DIED"
+      "S_MGR_UNIT_DIED",
+
+      "MGR_UNIT_DIE_REQUEST"
     ]
   },
 
@@ -575,6 +577,10 @@
       {
         "type": "float",
         "name": "attackRate"
+      },
+      {
+        "type": "float",
+        "name": "attackDelay"
       }
     ]
   },
@@ -799,6 +805,17 @@
   "S_MGR_UNIT_DIED": {
     "type": "message",
     "name": "MSG_S_MGR_UNIT_DIED",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      }
+    ]
+  },
+
+  "MGR_UNIT_DIE_REQUEST": {
+    "type": "message",
+    "name": "MSG_MGR_UNIT_DIE_REQUEST",
     "field": [
       {
         "type": "int",

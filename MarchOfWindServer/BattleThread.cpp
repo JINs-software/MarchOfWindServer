@@ -48,7 +48,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 				MSG_REPLY_NUM_OF_SELECTORS* body = reply->DirectReserve<MSG_REPLY_NUM_OF_SELECTORS>();
 				body->type = enPacketType::REPLY_NUM_OF_SELECTORS;
 				//body->numOfSelector = m_PlayerInfos[sessionID].numOfSelectors;
-				body->numOfSelector = 1;			// temp
+				body->numOfSelector = 4;			// temp
 
 				if (!SendPacket(sessionID, reply)) {
 					FreeSerialBuff(reply);
@@ -102,6 +102,14 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_ATTACK_STOP(sessionID, msg);
 		}
 		break;
+		// 유닛 강제 파괴 (추후 삭제)
+		case enPacketType::MGR_UNIT_DIE_REQUEST:
+		{
+			MSG_MGR_UNIT_DIE_REQUEST msg;
+			recvData >> msg;
+			Proc_UNIT_DIE_REQUEST(sessionID, msg);
+		}
+		break;
 		default:
 			break;
 		}
@@ -129,10 +137,11 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	unitInfo->attackDamage = UnitDatas[msg.unitType].AttackDamage;
 	unitInfo->attackDist = UnitDatas[msg.unitType].AttackDistance;
 	unitInfo->attackRate = UnitDatas[msg.unitType].AttackRate;
+	unitInfo->attackDelay = UnitDatas[msg.unitType].AttackDelay;
 	
 	// 테스트 유닛은 HP 10000으로 설정
 	if (msg.team == enPlayerTeamInBattleField::Team_Test) {
-		unitInfo->hp = 10000.0f;
+		unitInfo->hp = 200.0f;
 	}
 	
 
@@ -155,6 +164,7 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	body->maxHP = unitInfo->hp;								// temp
 	body->attackDistance = unitInfo->attackDist;	// temp
 	body->attackRate = unitInfo->attackRate;		// temp
+	body->attackDelay = unitInfo->attackDelay;
 	
 	BroadcastToGameManager(crtMsg);
 }
@@ -257,6 +267,18 @@ void BattleThread::Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STO
 	BroadcastToGameManager(atkStopMsg);
 }
 
+void BattleThread::Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg)
+{
+	//std::map<SessionID64, UnitInfo*> m_SessionUnitMap;
+	//std::map<UnitID, UnitInfo*> m_IdUnitMap;
+	//std::map<TeamID, std::map<UnitID, UnitInfo*>> m_TeamUnitMap;
+
+	if (m_IdUnitMap.find(msg.unitID) != m_IdUnitMap.end()) {
+		UnitInfo* unitInfo = m_IdUnitMap[msg.unitID];
+		Damage(unitInfo, 100000);
+	}
+}
+
 void BattleThread::BroadcastDamageMsg(UnitID targetID, int renewHP)
 {
 	JBuffer* dmgMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_UINT_DAMAGED));
@@ -326,6 +348,7 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 	if (attacker->CanAttack(clock())) {
 		// 거리 판정
 		float distanceToTarget = GetDistance(attacker->posX, attacker->posZ, target->posX, target->posZ);
+		distanceToTarget -= target->radius;
 		if (distanceToTarget <= attacker->attackDist) {
 
 			// 공격 패킷 전달
@@ -345,12 +368,12 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 			BroadcastToGameManager(atkMsg);
 
 			// 대미지 패킷 전달
-			Damage(sessionID, target, attacker->attackDamage);
+			Damage(target, attacker->attackDamage);
 		}
 	}
 }
 
-void BattleThread::Damage(SessionID64 sessionID, UnitInfo* target, int damage)
+void BattleThread::Damage(UnitInfo* target, int damage)
 {
 	if (target->hp - damage <= 0) {
 		// die
