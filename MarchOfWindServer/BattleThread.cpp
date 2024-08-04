@@ -48,7 +48,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 				MSG_REPLY_NUM_OF_SELECTORS* body = reply->DirectReserve<MSG_REPLY_NUM_OF_SELECTORS>();
 				body->type = enPacketType::REPLY_NUM_OF_SELECTORS;
 				//body->numOfSelector = m_PlayerInfos[sessionID].numOfSelectors;
-				body->numOfSelector = 4;			// temp
+				body->numOfSelector = 1;			// temp
 
 				if (!SendPacket(sessionID, reply)) {
 					FreeSerialBuff(reply);
@@ -346,30 +346,41 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 {
 	// 시간 판정
 	if (attacker->CanAttack(clock())) {
+		// 공격 패킷 전달
+		JBuffer* atkMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK));
+		MSG_S_MGR_ATTACK* body = atkMsg->DirectReserve<MSG_S_MGR_ATTACK>();
+		body->type = enPacketType::S_MGR_ATTACK;
+		body->unitID = attacker->ID;
+		body->team = attacker->team;
+		body->posX = attacker->posX;
+		body->posZ = attacker->posZ;
+		body->normX = attacker->normX;
+		body->normZ = attacker->normZ;
+		body->targetID = target->ID;
+		body->attackType = attackType;
+
+		cout << attacker->ID << "(team: " << attacker->team << ") Attack => " << target->ID << "(team: " << target->team << ")" << endl;
+		BroadcastToGameManager(atkMsg);
+
 		// 거리 판정
 		float distanceToTarget = GetDistance(attacker->posX, attacker->posZ, target->posX, target->posZ);
 		distanceToTarget -= target->radius;
 		if (distanceToTarget <= attacker->attackDist) {
-
-			// 공격 패킷 전달
-			JBuffer* atkMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK));
-			MSG_S_MGR_ATTACK* body = atkMsg->DirectReserve<MSG_S_MGR_ATTACK>();
-			body->type = enPacketType::S_MGR_ATTACK;
-			body->unitID = attacker->ID;
-			body->team = attacker->team;
-			body->posX = attacker->posX;
-			body->posZ = attacker->posZ;
-			body->normX = attacker->normX;
-			body->normZ = attacker->normZ;
-			body->targetID = target->ID;
-			body->attackType = attackType;
-
-			cout << attacker->ID << "(team: " << attacker->team << ") Attack => " << target->ID << "(team: " << target->team << ")" << endl;
-			BroadcastToGameManager(atkMsg);
-
 			// 대미지 패킷 전달
 			Damage(target, attacker->attackDamage);
 		}
+	}
+	else {
+		JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
+		MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
+		body->type = enPacketType::S_MGR_ATTACK_STOP;
+		body->unitID = attacker->ID;
+		body->posX = attacker->posX;
+		body->posZ = attacker->posZ;
+		body->normX = attacker->normX;
+		body->normZ = attacker->normZ;
+
+		BroadcastToGameManager(atkStopMsg);
 	}
 }
 
