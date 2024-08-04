@@ -48,13 +48,10 @@ private:
 
 		bool moving;
 		
-		UnitInfo(SessionID64 sid, int id, int damage) : sessionID(sid), ID(id), attackDamage(damage) {
-			attackCoolTimeMs = 0;
-			lastClockMs = clock();
-		}
-
 		bool CanAttack(clock_t clockMs) {
 			clock_t delta = clockMs - lastClockMs;
+			lastClockMs = clockMs;
+
 			attackCoolTimeMs -= delta;
 
 			if (attackCoolTimeMs <= 0) {
@@ -65,10 +62,10 @@ private:
 			return false;
 		}
 
-		void RestAttackDelay() {
-			attackCoolTimeMs = 0;
-			lastClockMs = clock();
-		}
+		//void RestAttackDelay() {
+		//	attackCoolTimeMs = 0;
+		//	lastClockMs = clock();
+		//}
 	};
 	std::map<SessionID64, UnitInfo*> m_SessionUnitMap;
 	std::map<UnitID, UnitInfo*> m_IdUnitMap;

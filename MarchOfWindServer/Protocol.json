@@ -75,6 +75,8 @@
 
       "UNIT_S_ATTACK",
       "S_MGR_ATTACK",
+      "S_MGR_ATTACK_INVALID",
+
       "UNIT_S_ATTACK_STOP",
       "S_MGR_ATTACK_STOP",
 
@@ -733,6 +735,37 @@
       {
         "type": "int",
         "name": "attackType"
+      }
+    ]
+  },
+
+  "S_MGR_ATTACK_INVALID": {
+    "type": "message",
+    "name": "MSG_S_MGR_ATTACK_INVALID",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "team"
+      },
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
       }
     ]
   },

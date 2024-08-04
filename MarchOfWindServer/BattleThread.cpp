@@ -118,18 +118,15 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 
 void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg)
 {
-	UnitInfo* unitInfo = new UnitInfo(sessionID, m_UnitAllocID++, 5);	// temp
+	UnitInfo* unitInfo = new UnitInfo();
+	unitInfo->sessionID = sessionID;
+	unitInfo->ID = m_UnitAllocID++;
 	unitInfo->unitType = msg.unitType;
 	unitInfo->team = msg.team;
 	unitInfo->posX = msg.posX;
 	unitInfo->posZ = msg.posZ;
 	unitInfo->normX = msg.normX;
 	unitInfo->normZ = msg.normZ;
-
-	//unitInfo->speed = 30;			// temp
-	//unitInfo->hp = 100;				// temp
-	//unitInfo->attackDist = 20;		// temp
-	//unitInfo->attackRate = 1.0f;	// temp
 
 	unitInfo->radius = UnitDatas[msg.unitType].Radius;
 	unitInfo->hp = UnitDatas[msg.unitType].HP;
@@ -138,7 +135,9 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	unitInfo->attackDist = UnitDatas[msg.unitType].AttackDistance;
 	unitInfo->attackRate = UnitDatas[msg.unitType].AttackRate;
 	unitInfo->attackDelay = UnitDatas[msg.unitType].AttackDelay;
-	
+	unitInfo->attackCoolTimeMs = (1.0f / unitInfo->attackRate) * CLOCKS_PER_SEC;
+	unitInfo->lastClockMs = clock();
+
 	// 테스트 유닛은 HP 10000으로 설정
 	if (msg.team == enPlayerTeamInBattleField::Team_Test) {
 		unitInfo->hp = 200.0f;
@@ -253,7 +252,7 @@ void BattleThread::Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STO
 
 
 	// 공격 중단 처리
-	unitInfo->RestAttackDelay();
+	//unitInfo->RestAttackDelay();
 
 	JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
 	MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
@@ -371,16 +370,27 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 		}
 	}
 	else {
-		JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
-		MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
-		body->type = enPacketType::S_MGR_ATTACK_STOP;
+		//JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
+		//MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
+		//body->type = enPacketType::S_MGR_ATTACK_STOP;
+		//body->unitID = attacker->ID;
+		//body->posX = attacker->posX;
+		//body->posZ = attacker->posZ;
+		//body->normX = attacker->normX;
+		//body->normZ = attacker->normZ;
+		//
+		//BroadcastToGameManager(atkStopMsg);
+		// => 공격 빈도가 다르다고 attack stop 메시지를 반환하면, 클라이언트 측에서 attack <-> idle 상태 전이가 빈번..
+		JBuffer* atkInvalidMSG = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_INVALID));
+		MSG_S_MGR_ATTACK_INVALID* body = atkInvalidMSG->DirectReserve<MSG_S_MGR_ATTACK_INVALID>();
+		body->type = enPacketType::S_MGR_ATTACK_INVALID;
 		body->unitID = attacker->ID;
 		body->posX = attacker->posX;
 		body->posZ = attacker->posZ;
 		body->normX = attacker->normX;
 		body->normZ = attacker->normZ;
 
-		BroadcastToGameManager(atkStopMsg);
+		BroadcastToGameManager(atkInvalidMSG);
 	}
 }
 

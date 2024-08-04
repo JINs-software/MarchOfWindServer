@@ -32,6 +32,7 @@ enum enPacketType
 	S_MGR_MOVE,
 	UNIT_S_ATTACK,
 	S_MGR_ATTACK,
+	S_MGR_ATTACK_INVALID,
 	UNIT_S_ATTACK_STOP,
 	S_MGR_ATTACK_STOP,
 	S_MGR_UINT_DAMAGED,
@@ -301,6 +302,17 @@ struct MSG_S_MGR_ATTACK
 	float normZ;
 	INT targetID;
 	INT attackType;
+};
+
+struct MSG_S_MGR_ATTACK_INVALID
+{
+	WORD type;
+	INT unitID;
+	INT team;
+	float posX;
+	float posZ;
+	float normX;
+	float normZ;
 };
 
 struct MSG_UNIT_S_ATTACK_STOP
