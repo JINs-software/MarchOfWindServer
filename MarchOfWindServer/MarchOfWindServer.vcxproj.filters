@@ -13,6 +13,9 @@
     <ClInclude Include="UpdateThread.h">
       <Filter>Update</Filter>
     </ClInclude>
+    <ClInclude Include="UnitObject.h">
+      <Filter>Update</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MOWServer.cpp" />

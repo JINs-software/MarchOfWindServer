@@ -145,9 +145,9 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	
 	UnitObject* newUnitObject = new UnitObject(unitInfo);
 
-	m_SessionUnitMap.insert({ sessionID, unitInfo });
-	m_IdUnitMap.insert({ unitInfo->ID, unitInfo });
-	m_TeamUnitMap[unitInfo->team].insert({ unitInfo->ID, unitInfo });
+	m_SessionUnitMap.insert({ sessionID, newUnitObject });
+	m_IdUnitMap.insert({ unitInfo->ID, newUnitObject });
+	m_TeamUnitMap[unitInfo->team].insert({ unitInfo->ID, newUnitObject });
 
 	JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_CREATE_UNIT));
 	MSG_S_MGR_CREATE_UNIT* body = crtMsg->DirectReserve< MSG_S_MGR_CREATE_UNIT>();

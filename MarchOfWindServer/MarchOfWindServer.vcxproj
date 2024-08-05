@@ -141,6 +141,7 @@
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="MOWServer.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="UnitObject.h" />
     <ClInclude Include="UpdateThread.h" />
   </ItemGroup>
   <ItemGroup>

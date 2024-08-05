@@ -29,9 +29,9 @@ private:
 	UpdateThread* m_UpdateThread;
 	
 	
-	std::map<SessionID64, UnitInfo*> m_SessionUnitMap;
-	std::map<UnitID, UnitInfo*> m_IdUnitMap;
-	std::map<TeamID, std::map<UnitID, UnitInfo*>> m_TeamUnitMap;
+	std::map<SessionID64, UnitObject*> m_SessionUnitMap;
+	std::map<UnitID, UnitObject*> m_IdUnitMap;
+	std::map<TeamID, std::map<UnitID, UnitObject*>> m_TeamUnitMap;
 	int m_UnitAllocID = 0;
 
 private:
@@ -40,10 +40,10 @@ private:
 		m_UpdateThread = new UpdateThread();
 		m_UpdateThread->StartUpdateThread();
 
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_A, std::map<UnitID, UnitInfo*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_B, std::map<UnitID, UnitInfo*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_C, std::map<UnitID, UnitInfo*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_D, std::map<UnitID, UnitInfo*>() });
+		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_A, std::map<UnitID, UnitObject*>() });
+		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_B, std::map<UnitID, UnitObject*>() });
+		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_C, std::map<UnitID, UnitObject*>() });
+		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_D, std::map<UnitID, UnitObject*>() });
 	}
 	virtual void OnStop()  override {
 		if (m_UpdateThread != NULL) {
