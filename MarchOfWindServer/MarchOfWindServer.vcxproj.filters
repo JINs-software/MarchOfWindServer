@@ -10,6 +10,9 @@
     <ClInclude Include="BattleThread.h" />
     <ClInclude Include="GatewayThread.h" />
     <ClInclude Include="GameStaticData.h" />
+    <ClInclude Include="UpdateThread.h">
+      <Filter>Update</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MOWServer.cpp" />
@@ -18,8 +21,16 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="BattleThread.cpp" />
     <ClCompile Include="GatewayThread.cpp" />
+    <ClCompile Include="UpdateThread.cpp">
+      <Filter>Update</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Protocol.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Update">
+      <UniqueIdentifier>{a6cf0cc9-3bf1-41b6-97e5-8c95af1a1d09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

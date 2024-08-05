@@ -143,6 +143,7 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 		unitInfo->hp = 200.0f;
 	}
 	
+	UnitObject* newUnitObject = new UnitObject(unitInfo);
 
 	m_SessionUnitMap.insert({ sessionID, unitInfo });
 	m_IdUnitMap.insert({ unitInfo->ID, unitInfo });
@@ -161,6 +162,7 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	body->normZ = msg.normZ;
 	body->speed = unitInfo->speed;								// temp
 	body->maxHP = unitInfo->hp;								// temp
+	body->radius = unitInfo->radius;
 	body->attackDistance = unitInfo->attackDist;	// temp
 	body->attackRate = unitInfo->attackRate;		// temp
 	body->attackDelay = unitInfo->attackDelay;

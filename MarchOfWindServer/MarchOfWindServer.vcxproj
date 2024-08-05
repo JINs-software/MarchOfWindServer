@@ -141,6 +141,7 @@
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="MOWServer.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="UpdateThread.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BattleThread.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MatchRoomThread.cpp" />
     <ClCompile Include="MOWServer.cpp" />
+    <ClCompile Include="UpdateThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Protocol.json" />

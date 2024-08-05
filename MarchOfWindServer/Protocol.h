@@ -248,6 +248,7 @@ struct MSG_S_MGR_CREATE_UNIT
 	float normZ;
 	float speed;
 	INT maxHP;
+	float radius;
 	float attackDistance;
 	float attackRate;
 	float attackDelay;

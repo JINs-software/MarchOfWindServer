@@ -574,6 +574,10 @@
       },
       {
         "type": "float",
+        "name": "radius"
+      },
+      {
+        "type": "float",
         "name": "attackDistance"
       },
       {
