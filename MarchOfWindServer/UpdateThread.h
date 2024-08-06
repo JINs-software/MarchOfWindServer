@@ -40,7 +40,7 @@ public:
 
 	void RegistGameObject(GameObject* gameObject) {
 		std::lock_guard<std::mutex> lockGuard(m_ReadyToRegistObjectsMtx);
-		m_ReadyToDestroyObjects.insert(gameObject);
+		m_ReadyToRegistObjects.insert(gameObject);
 	}
 	void DestroyGameObject(GameObject* gameObject) {
 		std::lock_guard<std::mutex> lockGuard(m_ReadyToDestroyObjectsMtx);

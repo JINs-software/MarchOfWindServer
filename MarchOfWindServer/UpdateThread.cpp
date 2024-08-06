@@ -16,10 +16,10 @@ UINT __stdcall UpdateThread::UpdateThreadFunc(void* arg)
 				GameObject* gameObject = *iter;
 				if (updateThread->m_ReadyToDestroyObjects.find(gameObject) != updateThread->m_ReadyToDestroyObjects.end()) {
 					gameObject->OnDestroy();
+					updateThread->m_ReadyToDestroyObjects.erase(gameObject);
 
 					delete gameObject;
 
-					updateThread->m_ReadyToDestroyObjects.erase(gameObject);
 					iter = updateThread->m_GameObjects.erase(iter);
 				}
 				else {
@@ -44,7 +44,9 @@ UINT __stdcall UpdateThread::UpdateThreadFunc(void* arg)
 		}
 
 		// 3. Update
-		float deltaTime = (clock() - timeStamp) / static_cast<float>(CLOCKS_PER_SEC);
+		clock_t nowTime = clock();
+		float deltaTime = (nowTime - timeStamp) / static_cast<float>(CLOCKS_PER_SEC);
+		timeStamp = nowTime;
 		for (auto gameObject : updateThread->m_GameObjects) {
 			gameObject->OnUpdate(deltaTime);
 		}
