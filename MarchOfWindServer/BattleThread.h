@@ -28,7 +28,7 @@ private:
 	std::map<SessionID64, PlayerInfo> m_PlayerInfos;
 
 	// 업데이트 스레드
-	UpdateThread* m_UpdateThread;
+	MoveUpdateThread* m_UpdateThread;
 	std::map<SessionID64, UnitID> m_SessionToUnitIdMap;
 	std::map<UnitID, UnitObject*> m_UnitObjects;
 	std::map<UnitID, UnitInfo*> m_UnitInfos;
@@ -38,7 +38,7 @@ private:
 private:
 	virtual void OnStart() override 
 	{
-		m_UpdateThread = new UpdateThread();
+		m_UpdateThread = new MoveUpdateThread();
 		m_UpdateThread->StartUpdateThread();
 	}
 	virtual void OnStop()  override {
@@ -57,6 +57,7 @@ private:
 
 	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
 	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
+	void Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE& msg);
 	void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
 	void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
 	void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);

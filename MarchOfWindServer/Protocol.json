@@ -73,6 +73,8 @@
       "UNIT_S_MOVE",
       "S_MGR_MOVE",
 
+      "UNIT_S_DIR_CHANGE",
+
       "UNIT_S_ATTACK",
       "S_MGR_ATTACK",
       "S_MGR_ATTACK_INVALID",
@@ -669,6 +671,29 @@
       {
         "type": "float",
         "name": "destZ"
+      }
+    ]
+  },
+
+  "UNIT_S_DIR_CHANGE": {
+    "type": "message",
+    "name": "MSG_UNIT_S_DIR_CHANGE",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
       }
     ]
   },

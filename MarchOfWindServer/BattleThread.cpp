@@ -88,6 +88,13 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_MOVE_UNIT(sessionID, msg);
 		}
 		break;
+		case enPacketType::UNIT_S_DIR_CHANGE:
+		{
+			MSG_UNIT_S_DIR_CHANGE msg;
+			recvData >> msg;
+			Proc_DIR_CHANGE(sessionID, msg);
+		}
+		break;
 		case enPacketType::UNIT_S_ATTACK:
 		{
 			MSG_UNIT_S_ATTACK msg;
@@ -118,7 +125,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 
 void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg)
 {
-	UnitInfo* unitInfo = new UnitInfo();
+	UnitInfo* unitInfo = new UnitInfo(m_UpdateThread);
 	unitInfo->sessionID = sessionID;
 	unitInfo->ID = m_UnitAllocID++;
 	unitInfo->unitType = msg.unitType;
@@ -145,7 +152,7 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	
 	m_SessionToUnitIdMap.insert({ sessionID, unitInfo->ID });
 	m_UnitInfos.insert({ unitInfo->ID, unitInfo });
-	UnitObject* newUnitObject = new UnitObject(unitInfo);
+	UnitObject* newUnitObject = new UnitObject(unitInfo, m_UpdateThread);
 	m_UnitObjects.insert({ unitInfo->ID, newUnitObject });
 	m_UpdateThread->RegistGameObject(newUnitObject);
 
@@ -192,9 +199,17 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) { 
-			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetPostion(msg.posX, msg.posZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
+		}
+		else {
+			if (msg.moveType == enUnitMoveType::Move_Start) {
+				cout << "[MOVE START SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+			}
+			else {
+				cout << "[MOVE STOP  SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+			}
 		}
 
 		JBuffer* movMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_MOVE));
@@ -215,6 +230,22 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 	}
 }
 
+void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE& msg)
+{
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
+
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
+
+		unitInfo->ResetPostion(msg.posX, msg.posZ);
+		unitInfo->SetNorm(msg.normX, msg.normZ);
+	}
+}
+
 void BattleThread::Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg)
 {
 	auto iter = m_SessionToUnitIdMap.find(sessionID);
@@ -227,13 +258,17 @@ void BattleThread::Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg)
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
 
 		unitInfo->SetNorm(msg.normX, msg.normZ);
+		unitInfo->moving = false;
 		
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) {
-			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetPostion(msg.posX, msg.posZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
+		}
+		else {
+			cout << "[SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
 		}
 
 		auto targetIter = m_UnitInfos.find(msg.targetID);
@@ -256,13 +291,17 @@ void BattleThread::Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STO
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
 
 		unitInfo->SetNorm(msg.normX, msg.normZ);
+		unitInfo->moving = false;
 
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) {
-			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetPostion(msg.posX, msg.posZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
+		}
+		else {
+			cout << "[SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
 		}
 
 		JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));

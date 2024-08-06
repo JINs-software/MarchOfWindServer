@@ -1,6 +1,6 @@
 #pragma once
 
-#include "UpdateThread.h"	
+#include "MoveUpdateThread.h"	
 
 struct UnitInfo {
 	using SessionID64 = unsigned long long ;
@@ -31,7 +31,10 @@ struct UnitInfo {
 
 	SRWLOCK unitSRWLock;
 
-	UnitInfo() {
+	MoveUpdateThread* UpdateThread;
+
+	UnitInfo(MoveUpdateThread* updateThread) {
+		UpdateThread = updateThread;
 		InitializeSRWLock(&unitSRWLock);
 	}
 	~UnitInfo() {
@@ -46,10 +49,35 @@ struct UnitInfo {
 
 		return ret;
 	}
-	void SetPostion(float newPosX, float newPosZ) {
+
+	void SetPostion(float posX, float posZ) {
 		AcquireSRWLockExclusive(&unitSRWLock);
+
+		this->posX = posX;
+		this->posZ = posZ;
+
+		int preciseX = posX * MoveUpdateThread::PRECISION;
+		int preciseZ = posZ * MoveUpdateThread::PRECISION;
+
+		UpdateThread->DrawCollder(posX, posZ, radius);
+
+		ReleaseSRWLockExclusive(&unitSRWLock);
+	}
+	void ResetPostion(float newPosX, float newPosZ) {
+		AcquireSRWLockExclusive(&unitSRWLock);
+		int preciseX = posX * MoveUpdateThread::PRECISION;
+		int preciseZ = posZ * MoveUpdateThread::PRECISION;
+		int preciseNewX = newPosX * MoveUpdateThread::PRECISION;
+		int preciseNewZ = newPosZ * MoveUpdateThread::PRECISION;
+		
+		if (preciseZ != preciseNewZ || preciseX != preciseNewX) {
+			UpdateThread->ClearCollider(posX, posZ, radius);
+			UpdateThread->DrawCollder(newPosX, newPosZ, radius);
+		}
+
 		posX = newPosX;
 		posZ = newPosZ;
+
 		ReleaseSRWLockExclusive(&unitSRWLock);
 	}
 	void SetNorm(float newNormX, float newNormZ) {
@@ -77,10 +105,14 @@ struct UnitInfo {
 class UnitObject : public GameObject {
 private:
 	UnitInfo* m_UnitInfo = NULL;
+	MoveUpdateThread* UpdateThread;
 
 public:
-	UnitObject(UnitInfo* unitInfo) {
+	UnitObject(UnitInfo* unitInfo, MoveUpdateThread* updateThread) {
 		m_UnitInfo = unitInfo;
+		UpdateThread = updateThread;
+
+		UpdateThread->DrawCollder(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius);
 	}
 	~UnitObject() {
 		delete m_UnitInfo;
@@ -89,12 +121,25 @@ public:
 private:
 	virtual void OnUpdate(float deltaTime) override {
 		if (m_UnitInfo->moving) {
-			m_UnitInfo->posX += m_UnitInfo->normX * m_UnitInfo->speed * deltaTime;
-			m_UnitInfo->posZ += m_UnitInfo->normZ * m_UnitInfo->speed * deltaTime;
-		}
-	}
+			AcquireSRWLockExclusive(&m_UnitInfo->unitSRWLock);
 
-	virtual void OnDestroy() override {
-		delete m_UnitInfo;
+			float newPosX = m_UnitInfo->posX + m_UnitInfo->normX * m_UnitInfo->speed * deltaTime;
+			float newPosZ = m_UnitInfo->posZ + m_UnitInfo->normZ * m_UnitInfo->speed * deltaTime;
+
+			if (UpdateThread->CheckCollider(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, newPosX, newPosZ)) {
+				// 진행 불가
+				cout << "@@@@@@@@@@@@@@ 콜라이더 충돌! 진행 불가! @@@@@@@@@@@@@@" << endl;
+			}
+			else {
+				// 진행 가능
+				UpdateThread->ClearCollider(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius);
+				UpdateThread->DrawCollder(newPosX, newPosZ, m_UnitInfo->radius);
+
+				m_UnitInfo->posX = newPosX;
+				m_UnitInfo->posZ = newPosZ;
+			}
+
+			ReleaseSRWLockExclusive(&m_UnitInfo->unitSRWLock);
+		}
 	}
 };
