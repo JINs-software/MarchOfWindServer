@@ -143,11 +143,11 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 		unitInfo->hp = 200.0f;
 	}
 	
+	m_SessionToUnitIdMap.insert({ sessionID, unitInfo->ID });
+	m_UnitInfos.insert({ unitInfo->ID, unitInfo });
 	UnitObject* newUnitObject = new UnitObject(unitInfo);
-
-	m_SessionUnitMap.insert({ sessionID, newUnitObject });
-	m_IdUnitMap.insert({ unitInfo->ID, newUnitObject });
-	m_TeamUnitMap[unitInfo->team].insert({ unitInfo->ID, newUnitObject });
+	m_UnitObjects.insert({ unitInfo->ID, newUnitObject });
+	m_UpdateThread->RegistGameObject(newUnitObject);
 
 	JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_CREATE_UNIT));
 	MSG_S_MGR_CREATE_UNIT* body = crtMsg->DirectReserve< MSG_S_MGR_CREATE_UNIT>();
@@ -172,100 +172,110 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 
 void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 {
-	auto iter = m_SessionUnitMap.find(sessionID);
-	if (iter == m_SessionUnitMap.end()) {
-		return;
-	}
-	UnitInfo* unitInfo = iter->second;
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
 
-	if (msg.moveType == enUnitMoveType::Move_Start) {
-		unitInfo->moving = true;
-	}
-	else if (msg.moveType == enUnitMoveType::Move_Stop) {
-		unitInfo->moving = false;
-	}
-	else {
-		DebugBreak();
-	}
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
+		
+		unitInfo->SetNorm(msg.normX, msg.normZ);
+		if (msg.moveType == enUnitMoveType::Move_Start) {
+			unitInfo->moving = true;
+		}
+		else {
+			unitInfo->moving = false;
+		}
 
-	unitInfo->posX = msg.posX;
-	unitInfo->posZ = msg.posZ;
-	unitInfo->normX = msg.normX;
-	unitInfo->normZ = msg.normZ;
-	unitInfo->speed = unitInfo->speed;
+		pair<float, float> unitPosition = unitInfo->GetPostion();
+		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
+		if (diff < AcceptablePositionDiff) { 
+			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitPosition.first = msg.posX;
+			unitPosition.second = msg.posZ;
+		}
 
-	// MOV 계열 메시지는 동일 따라서 그대로 복사하여 포워딩
-	JBuffer* movMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_MOVE));
-	MSG_S_MGR_MOVE* body = movMsg->DirectReserve<MSG_S_MGR_MOVE>();
-	body->type = enPacketType::S_MGR_MOVE;
-	body->unitID = unitInfo->ID;
-	body->team = unitInfo->team;
-	if (msg.moveType == enUnitMoveType::Move_Start) {
-		body->moveType = enUnitMoveType::Move_Start;
-	}
-	else if (msg.moveType == enUnitMoveType::Move_Stop) {
-		body->moveType = enUnitMoveType::Move_Stop;
-	}
-	body->posX = unitInfo->posX;
-	body->posZ = unitInfo->posZ;
-	body->normX = unitInfo->normX;
-	body->normZ = unitInfo->normZ;
-	body->speed = unitInfo->speed;
-	body->destX = msg.destX;
-	body->destZ = msg.destZ;
+		JBuffer* movMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_MOVE));
+		MSG_S_MGR_MOVE* body = movMsg->DirectReserve<MSG_S_MGR_MOVE>();
+		body->type = enPacketType::S_MGR_MOVE;
+		body->unitID = unitInfo->ID;
+		body->team = unitInfo->team;
+		body->moveType = msg.moveType;
+		body->posX = unitPosition.first;
+		body->posZ = unitPosition.second;
+		body->normX = unitInfo->normX;
+		body->normZ = unitInfo->normZ;
+		body->speed = unitInfo->speed;
+		body->destX = msg.destX;
+		body->destZ = msg.destZ;
 
-	BroadcastToGameManager(movMsg);
+		BroadcastToGameManager(movMsg);
+	}
 }
 
 void BattleThread::Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg)
 {
-	auto iter = m_SessionUnitMap.find(sessionID);
-	if (iter == m_SessionUnitMap.end()) {
-		return;
-	}
-	UnitInfo* unitInfo = iter->second;
-	unitInfo->moving = false;
-	unitInfo->posX = msg.posX;
-	unitInfo->posZ = msg.posZ;
-	unitInfo->normX = msg.normX;
-	unitInfo->normZ = msg.normZ;
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
 
-	auto titer = m_IdUnitMap.find(msg.targetID);
-	if (titer == m_IdUnitMap.end()) {
-		return;
-	}
-	UnitInfo* targetUnitInfo = titer->second;
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
 
-	// 공격 처리
-	Attack(sessionID, unitInfo, targetUnitInfo, msg.attackType);
+		unitInfo->SetNorm(msg.normX, msg.normZ);
+		
+		pair<float, float> unitPosition = unitInfo->GetPostion();
+		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
+		if (diff < AcceptablePositionDiff) {
+			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitPosition.first = msg.posX;
+			unitPosition.second = msg.posZ;
+		}
+
+		auto targetIter = m_UnitInfos.find(msg.targetID);
+		if (targetIter != m_UnitInfos.end()) {
+			UnitInfo* targetUnitInfo = targetIter->second;
+			Attack(sessionID, unitInfo, targetUnitInfo, msg.attackType);
+		}
+	}
 }
 
 void BattleThread::Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg)
 {
-	auto iter = m_SessionUnitMap.find(sessionID);
-	if (iter == m_SessionUnitMap.end()) {
-		return;
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
+
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
+
+		unitInfo->SetNorm(msg.normX, msg.normZ);
+
+		pair<float, float> unitPosition = unitInfo->GetPostion();
+		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
+		if (diff < AcceptablePositionDiff) {
+			unitInfo->SetPostion(msg.posX, msg.posZ);
+			unitPosition.first = msg.posX;
+			unitPosition.second = msg.posZ;
+		}
+
+		JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
+		MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
+		body->type = enPacketType::S_MGR_ATTACK_STOP;
+		body->unitID = unitInfo->ID;
+		body->posX = unitPosition.first;
+		body->posZ = unitPosition.second;
+		body->normX = unitInfo->normX;
+		body->normZ = unitInfo->normZ;
+
+		BroadcastToGameManager(atkStopMsg);
 	}
-	UnitInfo* unitInfo = iter->second;
-	unitInfo->posX = msg.posX;
-	unitInfo->posZ = msg.posZ;
-	unitInfo->normX = msg.normX;
-	unitInfo->normZ = msg.normZ;
-
-
-	// 공격 중단 처리
-	//unitInfo->RestAttackDelay();
-
-	JBuffer* atkStopMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK_STOP));
-	MSG_S_MGR_ATTACK_STOP* body = atkStopMsg->DirectReserve<MSG_S_MGR_ATTACK_STOP>();
-	body->type = enPacketType::S_MGR_ATTACK_STOP;
-	body->unitID = unitInfo->ID;
-	body->posX = unitInfo->posX;
-	body->posZ = unitInfo->posZ;
-	body->normX = unitInfo->normX;
-	body->normZ = unitInfo->normZ;
-	
-	BroadcastToGameManager(atkStopMsg);
 }
 
 void BattleThread::Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg)
@@ -274,8 +284,8 @@ void BattleThread::Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE
 	//std::map<UnitID, UnitInfo*> m_IdUnitMap;
 	//std::map<TeamID, std::map<UnitID, UnitInfo*>> m_TeamUnitMap;
 
-	if (m_IdUnitMap.find(msg.unitID) != m_IdUnitMap.end()) {
-		UnitInfo* unitInfo = m_IdUnitMap[msg.unitID];
+	if (m_UnitInfos.find(msg.unitID) != m_UnitInfos.end()) {
+		UnitInfo* unitInfo = m_UnitInfos[msg.unitID];
 		Damage(unitInfo, 100000);
 	}
 }
@@ -316,45 +326,43 @@ void BattleThread::BroadcastToGameManager(JBuffer* msg)
 
 void BattleThread::SendExistingUnits(SessionID64 sessionID)
 {
-	for (const auto& unitMap : m_TeamUnitMap) {
-		if (unitMap.first != m_PlayerInfos[sessionID].team) {
-			for (const auto& unitPair : unitMap.second) {
-				UnitInfo* unit = unitPair.second;
+	for (auto unitPair : m_UnitInfos) {
+		UnitInfo* unit = unitPair.second;
 
-				JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_CREATE_UNIT));
-				MSG_S_MGR_CREATE_UNIT* body = crtMsg->DirectReserve< MSG_S_MGR_CREATE_UNIT>();
-				body->type = enPacketType::S_MGR_CREATE_UNIT;
-				body->crtCode = 0;
-				body->unitID = unit->ID;
-				body->unitType = unit->unitType;
-				body->team = unit->team;
-				body->posX = unit->posX;
-				body->posZ = unit->posZ;
-				body->normX = unit->normX;
-				body->normZ = unit->normZ;
-				body->speed = unit->speed;		
-				body->maxHP = unit->hp;			
+		JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_CREATE_UNIT));
+		MSG_S_MGR_CREATE_UNIT* body = crtMsg->DirectReserve< MSG_S_MGR_CREATE_UNIT>();
+		body->type = enPacketType::S_MGR_CREATE_UNIT;
+		body->crtCode = 0;
+		body->unitID = unit->ID;
+		body->unitType = unit->unitType;
+		body->team = unit->team;
+		body->posX = unit->posX;
+		body->posZ = unit->posZ;
+		body->normX = unit->normX;
+		body->normZ = unit->normZ;
+		body->speed = unit->speed;
+		body->maxHP = unit->hp;
 
-				if (!SendPacket(sessionID, crtMsg)) {
-					FreeSerialBuff(crtMsg);
-				}
-			}
+		if (!SendPacket(sessionID, crtMsg)) {
+			FreeSerialBuff(crtMsg);
 		}
 	}
 }
 
 void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* target, int attackType)
 {
+	pair<float, float> attackerPosition = attacker->GetPostion();
+
 	// 시간 판정
 	if (attacker->CanAttack(clock())) {
-		// 공격 패킷 전달
+		// 공격 패킷 전달		
 		JBuffer* atkMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_ATTACK));
 		MSG_S_MGR_ATTACK* body = atkMsg->DirectReserve<MSG_S_MGR_ATTACK>();
 		body->type = enPacketType::S_MGR_ATTACK;
 		body->unitID = attacker->ID;
 		body->team = attacker->team;
-		body->posX = attacker->posX;
-		body->posZ = attacker->posZ;
+		body->posX = attackerPosition.first;
+		body->posZ = attackerPosition.second;
 		body->normX = attacker->normX;
 		body->normZ = attacker->normZ;
 		body->targetID = target->ID;
@@ -364,7 +372,8 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 		BroadcastToGameManager(atkMsg);
 
 		// 거리 판정
-		float distanceToTarget = GetDistance(attacker->posX, attacker->posZ, target->posX, target->posZ);
+		pair<float, float> targetPostion = target->GetPostion();
+		float distanceToTarget = GetDistance(attackerPosition.first, attackerPosition.second, targetPostion.first, targetPostion.second);
 		distanceToTarget -= target->radius;
 		if (distanceToTarget <= attacker->attackDist) {
 			// 대미지 패킷 전달
@@ -387,8 +396,8 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 		MSG_S_MGR_ATTACK_INVALID* body = atkInvalidMSG->DirectReserve<MSG_S_MGR_ATTACK_INVALID>();
 		body->type = enPacketType::S_MGR_ATTACK_INVALID;
 		body->unitID = attacker->ID;
-		body->posX = attacker->posX;
-		body->posZ = attacker->posZ;
+		body->posX = attackerPosition.first;
+		body->posZ = attackerPosition.second;
 		body->normX = attacker->normX;
 		body->normZ = attacker->normZ;
 
@@ -406,32 +415,28 @@ void BattleThread::Damage(UnitInfo* target, int damage)
 		body->unitID = target->ID;
 
 		SessionID64 targetSessionID = target->sessionID;
+		UnitID targetUnitID = target->ID;
 
-		if (m_SessionUnitMap.find(targetSessionID) != m_SessionUnitMap.end()) {
-			m_SessionUnitMap.erase(targetSessionID);
+		if (m_SessionToUnitIdMap.find(targetSessionID) == m_SessionToUnitIdMap.end()) {
+			DebugBreak();
 		}
 		else {
-			return;
+			m_SessionToUnitIdMap.erase(targetSessionID);
 		}
-
-		if (m_IdUnitMap.find(target->ID) != m_IdUnitMap.end()) {
-			m_IdUnitMap.erase(target->ID);
-		}
-		else {
-			return;
-		}
-
-		if (m_TeamUnitMap[target->team].find(target->ID) != m_TeamUnitMap[target->team].end()) {
-			m_TeamUnitMap[target->team].erase(target->ID);
+		if (m_UnitInfos.find(targetUnitID) == m_UnitInfos.end()) {
+			DebugBreak();
 		}
 		else {
-			return;
+			m_UnitInfos.erase(targetUnitID);
 		}
-
-		cout << target->ID << "(team: " << target->team << ") Died...!!" << endl;
-
-		delete target;
-		target = nullptr;
+		if (m_UnitObjects.find(targetUnitID) == m_UnitObjects.end()) {
+			DebugBreak();
+		}
+		else {
+			UnitObject* unitObject = m_UnitObjects[targetUnitID];
+			m_UpdateThread->DestroyGameObject(unitObject);
+			m_UnitObjects.erase(targetUnitID);
+		}
 
 		BroadcastToGameManager(dieMsg);
 	}

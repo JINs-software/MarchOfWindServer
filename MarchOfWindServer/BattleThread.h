@@ -12,6 +12,8 @@ class BattleThread : public JNetGroupThread
 	using UnitID = int;
 	using TeamID = int;
 
+	const float AcceptablePositionDiff = 3.0f;
+
 private:
 	int m_NumOfPlayers = 0;
 	int m_AliveOfPlayers = 0;
@@ -27,11 +29,10 @@ private:
 
 	// 업데이트 스레드
 	UpdateThread* m_UpdateThread;
+	std::map<SessionID64, UnitID> m_SessionToUnitIdMap;
+	std::map<UnitID, UnitObject*> m_UnitObjects;
+	std::map<UnitID, UnitInfo*> m_UnitInfos;
 	
-	
-	std::map<SessionID64, UnitObject*> m_SessionUnitMap;
-	std::map<UnitID, UnitObject*> m_IdUnitMap;
-	std::map<TeamID, std::map<UnitID, UnitObject*>> m_TeamUnitMap;
 	int m_UnitAllocID = 0;
 
 private:
@@ -39,11 +40,6 @@ private:
 	{
 		m_UpdateThread = new UpdateThread();
 		m_UpdateThread->StartUpdateThread();
-
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_A, std::map<UnitID, UnitObject*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_B, std::map<UnitID, UnitObject*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_C, std::map<UnitID, UnitObject*>() });
-		m_TeamUnitMap.insert({ enPlayerTeamInBattleField::Team_D, std::map<UnitID, UnitObject*>() });
 	}
 	virtual void OnStop()  override {
 		if (m_UpdateThread != NULL) {

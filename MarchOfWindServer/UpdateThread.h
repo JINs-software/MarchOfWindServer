@@ -9,11 +9,10 @@
 
 class GameObject {
 public:
+	virtual ~GameObject() {}
 
 	virtual void OnStart() {}
-
 	virtual void OnUpdate(float deltaTime) {}
-
 	virtual void OnDestroy() {}
 };
 

@@ -29,6 +29,36 @@ struct UnitInfo {
 
 	bool moving;
 
+	SRWLOCK unitSRWLock;
+
+	UnitInfo() {
+		InitializeSRWLock(&unitSRWLock);
+	}
+	~UnitInfo() {
+		ReleaseSRWLockExclusive(&unitSRWLock);
+	}
+
+	pair<float, float> GetPostion() {
+		pair<float, float> ret;
+		AcquireSRWLockShared(&unitSRWLock);
+		ret = { posX, posZ };
+		ReleaseSRWLockShared(&unitSRWLock);
+
+		return ret;
+	}
+	void SetPostion(float newPosX, float newPosZ) {
+		AcquireSRWLockExclusive(&unitSRWLock);
+		posX = newPosX;
+		posZ = newPosZ;
+		ReleaseSRWLockExclusive(&unitSRWLock);
+	}
+	void SetNorm(float newNormX, float newNormZ) {
+		AcquireSRWLockExclusive(&unitSRWLock);
+		normX = newNormX;
+		normZ = newNormZ;
+		ReleaseSRWLockExclusive(&unitSRWLock);
+	}
+
 	bool CanAttack(clock_t clockMs) {
 		clock_t delta = clockMs - lastClockMs;
 		lastClockMs = clockMs;
@@ -42,11 +72,6 @@ struct UnitInfo {
 
 		return false;
 	}
-
-	//void RestAttackDelay() {
-	//	attackCoolTimeMs = 0;
-	//	lastClockMs = clock();
-	//}
 };
 
 class UnitObject : public GameObject {
@@ -56,6 +81,9 @@ private:
 public:
 	UnitObject(UnitInfo* unitInfo) {
 		m_UnitInfo = unitInfo;
+	}
+	~UnitObject() {
+		delete m_UnitInfo;
 	}
 
 private:

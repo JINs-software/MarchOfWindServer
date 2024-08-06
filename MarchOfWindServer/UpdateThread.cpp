@@ -17,6 +17,7 @@ UINT __stdcall UpdateThread::UpdateThreadFunc(void* arg)
 				if (updateThread->m_ReadyToDestroyObjects.find(gameObject) != updateThread->m_ReadyToDestroyObjects.end()) {
 					gameObject->OnDestroy();
 
+					delete gameObject;
 
 					updateThread->m_ReadyToDestroyObjects.erase(gameObject);
 					iter = updateThread->m_GameObjects.erase(iter);
