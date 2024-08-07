@@ -1,6 +1,8 @@
 #pragma once
 #include <minwindef.h>
 
+#include "ProtocolExt.h"
+
 struct PROTOCOL_CONSTANT
 {
 	static const int MAX_OF_PLAYER_NAME_LEN = 32;
@@ -8,6 +10,7 @@ struct PROTOCOL_CONSTANT
 	static const int END_OF_LIST = 255;
 	static const int MAX_OF_PLAYER_IN_ROOM = 4;
 	static const int MAX_OF_MATCH_ROOM = 100;
+	static const int MAX_OF_COLLIDER_ELEMENTS = 100;
 };
 
 enum enPacketType
@@ -39,6 +42,8 @@ enum enPacketType
 	S_MGR_UINT_DAMAGED,
 	S_MGR_UNIT_DIED,
 	MGR_UNIT_DIE_REQUEST,
+	S_MONT_COLLIDER_MAP_RENEW,
+	S_MONT_COLLIDER_MAP,
 };
 
 enum enProtocolComRequest
@@ -362,6 +367,18 @@ struct MSG_MGR_UNIT_DIE_REQUEST
 {
 	WORD type;
 	INT unitID;
+};
+
+struct MSG_S_MONT_COLLIDER_MAP_RENEW
+{
+	WORD type;
+};
+
+struct MSG_S_MONT_COLLIDER_MAP
+{
+	WORD type;
+	INT numOfElements;
+	Position colliders[PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS];
 };
 
 #pragma pack(pop)

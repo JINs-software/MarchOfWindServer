@@ -492,3 +492,64 @@ void BattleThread::Damage(UnitInfo* target, int damage)
 		BroadcastToGameManager(damageMsg);
 	}
 }
+
+UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
+{
+	BattleThread* battleThread = reinterpret_cast<BattleThread*>(arg);
+	MoveUpdateThread* updateThread = battleThread->m_UpdateThread;
+
+	battleThread->AllocTlsMemPool();
+
+	while (true) {
+		Sleep(10);
+
+		std::vector<std::vector<Position>> positions;
+		positions.push_back(std::vector<Position>());
+
+		for (int z = 0; z < updateThread->m_UnitColliderCountMap.size(); z++) {
+			for (int x = 0; x < updateThread->m_UnitColliderCountMap[z].size(); x++) {
+				if (updateThread->m_UnitColliderCountMap[z][x] == 0) continue;
+
+				if (positions.back().size() >= PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS) {
+					positions.push_back(std::vector<Position>());
+				}
+				positions.back().push_back({ x, z });
+			}
+		}
+
+		if (positions.size() == 1 && positions.back().size() == 0) {
+			continue;
+		}
+
+		JBuffer* renewMsg = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MONT_COLLIDER_MAP_RENEW));
+		MSG_S_MONT_COLLIDER_MAP_RENEW* renewBody =  renewMsg->DirectReserve<MSG_S_MONT_COLLIDER_MAP_RENEW>();
+		renewBody->type = enPacketType::S_MONT_COLLIDER_MAP_RENEW;
+		for (const auto player : battleThread->m_PlayerInfos) {
+			if (!battleThread->SendPacket(player.second.sessionID, renewMsg)) {
+				battleThread->FreeSerialBuff(renewMsg);
+			}
+		}
+
+
+		for (int i = 0; i < positions.size(); i++) {
+			if (positions[i].size() == 0) {
+				continue;
+			}
+
+			JBuffer* msg = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MONT_COLLIDER_MAP));
+			MSG_S_MONT_COLLIDER_MAP* body = msg->DirectReserve<MSG_S_MONT_COLLIDER_MAP>();
+			body->type = enPacketType::S_MONT_COLLIDER_MAP;
+			body->numOfElements = positions[i].size();
+			memcpy(body->colliders, positions[i].data(), sizeof(Position) * positions[i].size());
+
+			for (const auto player : battleThread->m_PlayerInfos) {
+				battleThread->AddRefSerialBuff(msg);
+				if (!battleThread->SendPacket(player.second.sessionID, msg)) {
+					battleThread->FreeSerialBuff(msg);
+				}
+			}
+
+			battleThread->FreeSerialBuff(msg);
+		}
+	}
+}

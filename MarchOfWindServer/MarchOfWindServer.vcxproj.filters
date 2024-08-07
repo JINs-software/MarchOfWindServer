@@ -16,7 +16,10 @@
     <ClInclude Include="UnitObject.h">
       <Filter>Update</Filter>
     </ClInclude>
-    <ClInclude Include="MoveUpdateThread.h" />
+    <ClInclude Include="MoveUpdateThread.h">
+      <Filter>Update</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtocolExt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MOWServer.cpp" />
@@ -26,6 +29,9 @@
     <ClCompile Include="BattleThread.cpp" />
     <ClCompile Include="GatewayThread.cpp" />
     <ClCompile Include="UpdateThread.cpp">
+      <Filter>Update</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveUpdateThread.cpp">
       <Filter>Update</Filter>
     </ClCompile>
   </ItemGroup>

@@ -40,6 +40,8 @@ private:
 	{
 		m_UpdateThread = new MoveUpdateThread();
 		m_UpdateThread->StartUpdateThread();
+
+		_beginthreadex(NULL, 0, SendUpdatedColliderInfoToMont, this, 0, NULL);
 	}
 	virtual void OnStop()  override {
 		if (m_UpdateThread != NULL) {
@@ -75,5 +77,9 @@ private:
 	inline float GetDistance(float x, float z, float tx, float tz) {
 		return sqrt(pow(x - tx, 2) + pow(z - tz, 2));
 	}
+
+
+	// 모니터링
+	static UINT __stdcall SendUpdatedColliderInfoToMont(void* arg);
 };
 

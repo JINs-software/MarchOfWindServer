@@ -86,7 +86,10 @@
 
       "S_MGR_UNIT_DIED",
 
-      "MGR_UNIT_DIE_REQUEST"
+      "MGR_UNIT_DIE_REQUEST",
+
+      "S_MONT_COLLIDER_MAP_RENEW",
+      "S_MONT_COLLIDER_MAP"
     ]
   },
 
@@ -230,6 +233,10 @@
       },
       {
         "name": "MAX_OF_MATCH_ROOM",
+        "value": 100
+      },
+      {
+        "name": "MAX_OF_COLLIDER_ELEMENTS",
         "value": 100
       }
     ]
@@ -882,6 +889,31 @@
       {
         "type": "int",
         "name": "unitID"
+      }
+    ]
+  },
+
+  "S_MONT_COLLIDER_MAP_RENEW": {
+    "type": "message",
+    "name": "MSG_S_MONT_COLLIDER_MAP_RENEW",
+    "field": []
+  },
+
+  "S_MONT_COLLIDER_MAP": {
+    "type": "message",
+    "name": "MSG_S_MONT_COLLIDER_MAP",
+    "field": [
+      {
+        "type": "int",
+        "name": "numOfElements"
+      },
+      {
+        "type": "Position",
+        "array": [
+          "PROTOCOL_CONSTANT",
+          "MAX_OF_COLLIDER_ELEMENTS"
+        ],
+        "name": "colliders"
       }
     ]
   }
