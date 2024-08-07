@@ -28,10 +28,6 @@
     <ClCompile Include="UpdateThread.cpp">
       <Filter>Update</Filter>
     </ClCompile>
-    <ClCompile Include="UnitObject.cpp">
-      <Filter>Update</Filter>
-    </ClCompile>
-    <ClCompile Include="MoveUpdateThread.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Protocol.json" />
