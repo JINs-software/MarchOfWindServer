@@ -59,6 +59,7 @@ private:
 
 	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
 	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
+	void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
 	void Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE& msg);
 	void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
 	void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);

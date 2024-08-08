@@ -2,6 +2,111 @@
 
 using namespace std;
 
+
+void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw, std::set<std::pair<int, int>>& colliders) {
+	int preciseX = x * PRECISION;
+	int preciseZ = z * PRECISION;
+	int preciseRadius = radius * PRECISION;
+
+	if (draw) {
+		Circle_2 circle({ preciseX - preciseRadius, preciseZ }, { preciseX + preciseRadius, preciseZ });
+		CGAL::Bbox_2 bbox = circle.bbox();
+		for (int x = bbox.xmin(); x <= bbox.xmax(); x++) {
+			for (int z = bbox.ymin(); z <= bbox.ymax(); z++) {
+				Point_2 p(x, z);
+				if (circle.has_on_boundary(p)) {
+					m_UnitColliderCountMap[z][x] += 1;
+					colliders.insert(make_pair(x, z));
+				}
+			}
+		}
+	}
+	else {
+		for (const auto& p : colliders) {
+			m_UnitColliderCountMap[p.second][p.first] -= 1;
+		}
+		colliders.clear();
+	}
+	
+}
+bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, float nz, std::set<std::pair<int, int>>& colliders) {
+	int preciseX = x * PRECISION;
+	int preciseZ = z * PRECISION;
+	int preciseRadius = radius * PRECISION;
+	int preciseNX = nx * PRECISION;
+	int preciseNZ = nz * PRECISION;
+
+	if (preciseX == preciseNX && preciseZ == preciseNZ) {
+		return true;
+	}
+
+	Circle_2 circle({ preciseX - preciseRadius, preciseZ }, { preciseX + preciseRadius, preciseZ });
+	Circle_2 circleNew({ preciseNX - preciseRadius, preciseNZ }, { preciseNX + preciseRadius, preciseNZ });
+
+	if (CGAL::do_intersect(circle, circleNew)) {
+		CGAL::Bbox_2 bbox = circleNew.bbox();
+		for (int y = bbox.ymin() + 1; y < bbox.ymax(); y++) {
+			for (int x = bbox.xmin() + 1; x < bbox.xmax(); x++) {
+				Point_2 p(x, y);
+				if (circleNew.has_on_bounded_side(p) && !circle.has_on_boundary(p) && !circle.has_on_bounded_side(p)) {
+					if (m_UnitColliderCountMap[y][x] > 0) {
+						return false;
+					}
+				}
+			}
+		}
+	}
+	else {
+		CGAL::Bbox_2 bbox = circleNew.bbox();
+		for (int y = bbox.ymin() + 1; y < bbox.ymax(); y++) {
+			for (int x = bbox.xmin() + 1; x < bbox.xmax(); x++) {
+				Point_2 p(x, y);
+				if (circleNew.has_on_bounded_side(p)) {
+					if (m_UnitColliderCountMap[y][x] > 0) {
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	//CGAL::Bbox_2 delBox = circle.bbox();
+	//for (int x = delBox.xmin(); x <= delBox.xmax(); x++) {
+	//	for (int z = delBox.ymin(); z <= delBox.ymax(); z++) {
+	//		Point_2 p(x, z);
+	//		if (circle.has_on_boundary(p)) {
+	//			if (colliders.find(make_pair(x, z)) == colliders.end()) {
+	//				DebugBreak();
+	//			}
+	//			m_UnitColliderCountMap[z][x] -= 1;
+	//			colliders.erase(make_pair(x, z));
+	//		}
+	//	}
+	//}
+	for (const auto& p : colliders) {
+		m_UnitColliderCountMap[p.second][p.first] -= 1;
+	}
+	colliders.clear();
+
+
+	CGAL::Bbox_2 drawBox = circleNew.bbox();
+	for (int x = drawBox.xmin(); x <= drawBox.xmax(); x++) {
+		for (int z = drawBox.ymin(); z <= drawBox.ymax(); z++) {
+			Point_2 p(x, z);
+			if (circleNew.has_on_boundary(p)) {
+				//if (colliders.find(make_pair(x, z)) != colliders.end()) {
+				//	DebugBreak();
+				//}
+				m_UnitColliderCountMap[z][x] += 1;
+				colliders.insert(make_pair(x, z));
+			}
+		}
+	}
+
+	return true;
+}
+
+/*
 void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw) {
 
 	int preciseX = x * PRECISION;
@@ -33,9 +138,14 @@ void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw) {
 	};
 
 	Polygon_2 polygon(points.begin(), points.end());
+
+	if (!polygon.is_simple() || !polygon.is_counterclockwise_oriented()) {
+		DebugBreak();
+	}
+
 	CGAL::Bbox_2 bbox = polygon.bbox();
 
-	AcquireSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
+	//AcquireSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
 	for (int x = bbox.xmin(); x <= bbox.xmax(); x++) {
 		for (int z = bbox.ymin(); z <= bbox.ymax(); z++) {
 			Point_2 p(x, z);
@@ -52,8 +162,97 @@ void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw) {
 			}
 		}
 	}
-	ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
+	//ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
 }
+
+bool MoveUpdateThread::MoveCollider_new(float x, float z, float radius, float nx, float nz) {
+	// 기존 팔각형 꼭지점 좌표
+	int preciseX = x * PRECISION;
+	int preciseZ = z * PRECISION;
+	int preciseRadius = radius * PRECISION;
+
+	// 새로운 팔각형 꼭지점 좌표
+	int preciseNX = nx * PRECISION;
+	int preciseNZ = nz * PRECISION;
+
+	//int diff = (2 - sqrt(2)) * preciseRadius;
+	int diff = preciseRadius / sqrt(2);
+
+	if (preciseX == preciseNX && preciseZ == preciseNZ) {
+		return true;
+	}
+
+	vector<Point_2> points = {
+		Point_2(preciseX + diff, preciseZ + diff), Point_2(preciseX, preciseZ + preciseRadius),
+		Point_2(preciseX - diff, preciseZ + diff), Point_2(preciseX - preciseRadius, preciseZ),
+		Point_2(preciseX - diff, preciseZ - diff), Point_2(preciseX, preciseZ - preciseRadius),
+		Point_2(preciseX + diff, preciseZ - diff), Point_2(preciseX + preciseRadius, preciseZ)
+	};
+
+	vector<Point_2> pointsNew = {
+		Point_2(preciseNX + diff, preciseNZ + diff), Point_2(preciseNX, preciseNZ + preciseRadius),
+		Point_2(preciseNX - diff, preciseNZ + diff), Point_2(preciseNX - preciseRadius, preciseNZ),
+		Point_2(preciseNX - diff, preciseNZ - diff), Point_2(preciseNX, preciseNZ - preciseRadius),
+		Point_2(preciseNX + diff, preciseNZ - diff), Point_2(preciseNX + preciseRadius, preciseNZ)
+	};
+
+	Polygon_2 polygon(points.begin(), points.end());
+	Polygon_2 polygonNew(pointsNew.begin(), pointsNew.end());
+
+	if (!polygon.is_simple() || !polygon.is_counterclockwise_oriented() || !polygonNew.is_simple() || !polygonNew.is_counterclockwise_oriented()) {	// 자가 교차 폴리곤이 있는지 검사
+		DebugBreak();
+	}
+
+	if (CGAL::do_intersect(polygon, polygonNew)) {
+		CGAL::Bbox_2 bbox = polygonNew.bbox();
+		for (int y = bbox.ymin() + 1; y < bbox.ymax(); y++) {
+			for (int x = bbox.xmin() + 1; x < bbox.xmax(); x++) {
+				Point_2 p(x, y);
+				if (polygonNew.has_on_bounded_side(p) || !polygon.has_on_boundary(p) || !polygon.has_on_bounded_side(p)) {
+					if (m_UnitColliderCountMap[y][x] > 0) {
+						return false;
+					}
+				}
+			}
+		}
+	}
+	else {
+		CGAL::Bbox_2 bbox = polygonNew.bbox();
+		for (int y = bbox.ymin() + 1; y < bbox.ymax(); y++) {
+			for (int x = bbox.xmin() + 1; x < bbox.xmax(); x++) {
+				Point_2 p(x, y);
+				if (polygonNew.has_on_bounded_side(p)) {
+					if (m_UnitColliderCountMap[y][x] > 0) {
+						return false;
+					}
+				}
+			}
+		}
+	}
+
+	CGAL::Bbox_2 drawBox = polygonNew.bbox();
+	for (int x = drawBox.xmin(); x <= drawBox.xmax(); x++) {
+		for (int z = drawBox.ymin(); z <= drawBox.ymax(); z++) {
+			Point_2 p(x, z);
+			if (polygonNew.has_on_boundary(p)) {
+				m_UnitColliderCountMap[z][x] += 1;
+			}
+		}
+	}
+	CGAL::Bbox_2 delBox = polygon.bbox();
+	for (int x = delBox.xmin(); x <= delBox.xmax(); x++) {
+		for (int z = delBox.ymin(); z <= delBox.ymax(); z++) {
+			Point_2 p(x, z);
+			if (polygon.has_on_boundary(p)) {
+				m_UnitColliderCountMap[z][x] -= 1;
+			}
+		}
+	}
+
+	return true;
+}
+
+
 
 bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, float nz) {
 	// 기존 팔각형 꼭지점 좌표
@@ -114,7 +313,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 	Polygon_2 polygon(points.begin(), points.end());
 	Polygon_2 polygonNew(pointsNew.begin(), pointsNew.end());
 
-	if (!polygon.is_simple() || !polygonNew.is_simple()) {	// 자가 교차 폴리곤이 있는지 검사
+	if (!polygon.is_simple() || !polygon.is_counterclockwise_oriented() || !polygonNew.is_simple() || !polygonNew.is_counterclockwise_oriented()) {	// 자가 교차 폴리곤이 있는지 검사
 		DebugBreak();
 	}
 
@@ -129,7 +328,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		// (+ 표시되는 선분의 좌표는 정수이기에 정확한 일직선이 아님)
 		int distance = sqrt(pow(preciseX - preciseNX, 2) + pow(preciseZ - preciseNZ, 2));
 		if (distance < preciseRadius * 2) {
-			//return true;
+			cout << "distance < preciseRadius * 2" << endl;
 		}
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		else {
@@ -146,30 +345,6 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 				}
 			}
 		}
-
-		AcquireSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
-		/*
-		for (int x = newBbox.xmin(); x <= newBbox.xmax(); x++) {
-			for (int z = newBbox.ymin(); z <= newBbox.ymax(); z++) {
-				Point_2 p(x, z);
-				if (polygonNew.has_on_bounded_side(p)) {
-					m_UnitColliderCountMap[z][x] += 1;
-				}
-			}
-		}
-
-		CGAL::Bbox_2 beforeBbox = polygon.bbox();
-		for (int x = beforeBbox.xmin(); x <= beforeBbox.xmax(); x++) {
-			for (int z = beforeBbox.ymin(); z <= beforeBbox.ymax(); z++) {
-				Point_2 p(x, z);
-				if (polygon.has_on_bounded_side(p)) {
-					//if (m_UnitColliderCountMap[z][x] <= 0) {
-					//	DebugBreak;
-					//}
-					m_UnitColliderCountMap[z][x] -= 1;
-				}
-			}
-		}*/
 
 		CGAL::Bbox_2 drawBox = polygonNew.bbox();
 		for (int x = drawBox.xmin(); x <= drawBox.xmax(); x++) {
@@ -190,7 +365,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 			}
 		}
 
-		ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
+		//ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
 
 		return true;
 	}
@@ -200,6 +375,13 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 
 		// polygonA와 교차 영역의 차이를 계산하여 polygonA의 겹치지 않는 영역을 구합니다.
 		for (const auto& intersection : intersections) {
+			// 교차 폴리곤의 유효성 검사
+			// is_unbounded: 교차 폴리곤이 무한한지(즉, 경계가 없는지)를 확인
+			// outer_boundary: Polygon_with_holes_2 객체에서 외곽 경계를 나타내는 Polygon_2 객체를 반환
+			if (intersection.is_unbounded() || intersection.outer_boundary().is_empty()) {
+				continue;
+			}
+
 			std::list<Polygon_with_holes_2> result;
 			CGAL::difference(polygonNew, intersection, std::back_inserter(result));
 			for (const auto& res : result) {
@@ -225,7 +407,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		}
 
 
-		AcquireSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
+		//AcquireSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
 		//std::vector<Polygon_2> backwardPolygon;
 		//
 		//for (const auto& intersection : intersections) {
@@ -282,8 +464,9 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 			}
 		}
 
-		ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
+		//ReleaseSRWLockExclusive(&m_UnitColliderCountMapSRWLock);
 
 		return true;// 두 개의 새로운 도형을 위한 벡터입니다.
 	}
 }
+*/

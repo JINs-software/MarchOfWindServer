@@ -88,6 +88,12 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_MOVE_UNIT(sessionID, msg);
 		}
 		break;
+		case enPacketType::UNIT_S_SYNC_POSITION: {
+			MSG_UNIT_S_SYNC_POSITION msg;
+			recvData >> msg;
+			Proc_SYNC_POSITION(sessionID, msg);
+		}
+		break;
 		case enPacketType::UNIT_S_DIR_CHANGE:
 		{
 			MSG_UNIT_S_DIR_CHANGE msg;
@@ -188,7 +194,30 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
 		
-		unitInfo->SetNorm(msg.normX, msg.normZ);
+		//unitInfo->SetNorm(msg.normX, msg.normZ);
+		//if (msg.moveType == enUnitMoveType::Move_Start) {
+		//	unitInfo->moving = true;
+		//}
+		//else {
+		//	unitInfo->moving = false;
+		//}
+		//
+		//pair<float, float> unitPosition = unitInfo->GetPostion();
+		//float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
+		//if (diff < AcceptablePositionDiff) { 
+		//	unitInfo->ResetPostion(msg.posX, msg.posZ);
+		//	unitPosition.first = msg.posX;
+		//	unitPosition.second = msg.posZ;
+		//}
+		//else {
+		//	if (msg.moveType == enUnitMoveType::Move_Start) {
+		//		cout << "[MOVE START SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+		//	}
+		//	else {
+		//		cout << "[MOVE STOP  SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+		//	}
+		//}
+
 		if (msg.moveType == enUnitMoveType::Move_Start) {
 			unitInfo->moving = true;
 		}
@@ -199,7 +228,7 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) { 
-			unitInfo->ResetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
 		}
@@ -230,6 +259,23 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 	}
 }
 
+void BattleThread::Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg)
+{
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
+
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
+
+		//unitInfo->ResetPostion(msg.posX, msg.posZ);
+		//unitInfo->SetNorm(msg.normX, msg.normZ);
+		unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
+	}
+}
+
 void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE& msg)
 {
 	auto iter = m_SessionToUnitIdMap.find(sessionID);
@@ -241,8 +287,9 @@ void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE&
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
 
-		unitInfo->ResetPostion(msg.posX, msg.posZ);
-		unitInfo->SetNorm(msg.normX, msg.normZ);
+		//unitInfo->ResetPostion(msg.posX, msg.posZ);
+		//unitInfo->SetNorm(msg.normX, msg.normZ);
+		unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
 	}
 }
 
@@ -256,14 +303,12 @@ void BattleThread::Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg)
 		}
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
-
-		unitInfo->SetNorm(msg.normX, msg.normZ);
 		unitInfo->moving = false;
-		
+
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) {
-			unitInfo->ResetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
 		}
@@ -289,14 +334,12 @@ void BattleThread::Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STO
 		}
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
-
-		unitInfo->SetNorm(msg.normX, msg.normZ);
 		unitInfo->moving = false;
 
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
 		if (diff < AcceptablePositionDiff) {
-			unitInfo->ResetPostion(msg.posX, msg.posZ);
+			unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
 			unitPosition.first = msg.posX;
 			unitPosition.second = msg.posZ;
 		}
@@ -501,7 +544,7 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 	battleThread->AllocTlsMemPool();
 
 	while (true) {
-		Sleep(10);
+		Sleep(1);
 
 		std::vector<std::vector<Position>> positions;
 		positions.push_back(std::vector<Position>());
@@ -509,6 +552,7 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 		for (int z = 0; z < updateThread->m_UnitColliderCountMap.size(); z++) {
 			for (int x = 0; x < updateThread->m_UnitColliderCountMap[z].size(); x++) {
 				if (updateThread->m_UnitColliderCountMap[z][x] == 0) continue;
+				else if (updateThread->m_UnitColliderCountMap[z][x] < 0) DebugBreak();
 
 				if (positions.back().size() >= PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS) {
 					positions.push_back(std::vector<Position>());
@@ -525,10 +569,12 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 		MSG_S_MONT_COLLIDER_MAP_RENEW* renewBody =  renewMsg->DirectReserve<MSG_S_MONT_COLLIDER_MAP_RENEW>();
 		renewBody->type = enPacketType::S_MONT_COLLIDER_MAP_RENEW;
 		for (const auto player : battleThread->m_PlayerInfos) {
+			battleThread->AddRefSerialBuff(renewMsg);
 			if (!battleThread->SendPacket(player.second.sessionID, renewMsg)) {
 				battleThread->FreeSerialBuff(renewMsg);
 			}
 		}
+		battleThread->FreeSerialBuff(renewMsg);
 
 
 		for (int i = 0; i < positions.size(); i++) {
@@ -548,7 +594,6 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 					battleThread->FreeSerialBuff(msg);
 				}
 			}
-
 			battleThread->FreeSerialBuff(msg);
 		}
 	}

@@ -73,6 +73,7 @@
       "UNIT_S_MOVE",
       "S_MGR_MOVE",
 
+      "UNIT_S_SYNC_POSITION",
       "UNIT_S_DIR_CHANGE",
 
       "UNIT_S_ATTACK",
@@ -678,6 +679,29 @@
       {
         "type": "float",
         "name": "destZ"
+      }
+    ]
+  },
+
+  "UNIT_S_SYNC_POSITION": {
+    "type": "message",
+    "name": "MSG_UNIT_S_SYNC_POSITION",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
       }
     ]
   },

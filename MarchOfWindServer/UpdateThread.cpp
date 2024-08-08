@@ -38,6 +38,7 @@ UINT __stdcall UpdateThread::UpdateThreadFunc(void* arg)
 
 			for (auto gameObject : updateThread->m_ReadyToRegistObjects) {
 				updateThread->m_GameObjects.push_back(gameObject);
+				gameObject->OnStart();
 			}
 
 			updateThread->m_ReadyToRegistObjects.clear();

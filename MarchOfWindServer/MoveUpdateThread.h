@@ -7,14 +7,17 @@
 #include <mutex>
 
 #include <CGAL/Simple_cartesian.h>
-#include <CGAL/Boolean_set_operations_2.h>
-#include <CGAL/Polygon_2.h>
-#include <CGAL/Polygon_with_holes_2.h>
+//#include <CGAL/Boolean_set_operations_2.h>
+//#include <CGAL/Polygon_2.h>
+//#include <CGAL/Polygon_with_holes_2.h>
+#include <CGAL/Circle_2.h>
 
-typedef CGAL::Simple_cartesian<int> Kernel;
-typedef CGAL::Polygon_2<Kernel> Polygon_2;
-typedef CGAL::Polygon_with_holes_2<Kernel> Polygon_with_holes_2;
+typedef CGAL::Simple_cartesian<int> Kernel;	
+//typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel; // thread-safe?
+//typedef CGAL::Polygon_2<Kernel> Polygon_2;
+//typedef CGAL::Polygon_with_holes_2<Kernel> Polygon_with_holes_2;
 typedef Kernel::Point_2 Point_2;
+typedef CGAL::Circle_2<Kernel> Circle_2;
 
 
 using uint16 = unsigned short;
@@ -29,7 +32,7 @@ public:
 	static const BYTE PRECISION = 10;
 
 	std::vector<std::vector<int>>	m_UnitColliderCountMap;
-	SRWLOCK							m_UnitColliderCountMapSRWLock;
+	//SRWLOCK							m_UnitColliderCountMapSRWLock;
 
 	//std::vector<vector<uint64>> m_UnitColliderBitMap;	// bit map 이전 성능 테스트
 
@@ -38,7 +41,7 @@ public:
 
 		m_UnitColliderCountMap.resize(RANGE_Z * PRECISION, std::vector<int>(RANGE_X * PRECISION, 0));
 		//m_UnitColliderBitMap.resize((RANGE_Z * PRECISION) / 64, vector<uint64>((RANGE_X * PRECISION) / 64, 0));
-		InitializeSRWLock(&m_UnitColliderCountMapSRWLock);
+		//InitializeSRWLock(&m_UnitColliderCountMapSRWLock);
 
 		UpdateThread::StartUpdateThread();
 	}
@@ -47,7 +50,13 @@ public:
 		UpdateThread::StopUpdateThread();
 	}
 
-	void ResetCollder(float x, float z, float radius, bool draw = true);
-	bool MoveCollider(float x, float z, float radius, float nx, float nz);
+	// Polygon
+	//void ResetCollder(float x, float z, float radius, bool draw = true);
+	//bool MoveCollider_new(float x, float z, float radius, float nx, float nz);
+	//bool MoveCollider(float x, float z, float radius, float nx, float nz);
+
+	// Circle
+	void ResetCollder(float x, float z, float radius, bool draw, std::set<std::pair<int, int>>& colliders);
+	bool MoveCollider(float x, float z, float radius, float nx, float nz, std::set<std::pair<int, int>>& colliders);
 };
 

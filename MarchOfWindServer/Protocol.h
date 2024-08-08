@@ -33,6 +33,7 @@ enum enPacketType
 	S_MGR_CREATE_UNIT,
 	UNIT_S_MOVE,
 	S_MGR_MOVE,
+	UNIT_S_SYNC_POSITION,
 	UNIT_S_DIR_CHANGE,
 	UNIT_S_ATTACK,
 	S_MGR_ATTACK,
@@ -285,6 +286,15 @@ struct MSG_S_MGR_MOVE
 	float speed;
 	float destX;
 	float destZ;
+};
+
+struct MSG_UNIT_S_SYNC_POSITION
+{
+	WORD type;
+	float posX;
+	float posZ;
+	float normX;
+	float normZ;
 };
 
 struct MSG_UNIT_S_DIR_CHANGE
