@@ -121,7 +121,7 @@ private:
 					m_UnitInfo->posZ = newPosZ;
 				}
 				else {
-					cout << "@@@@@@@@@@@@@@ 콜라이더 충돌! 진행 불가! @@@@@@@@@@@@@@" << endl;
+					cout << "[" << clock() << "]: " << "콜라이더 충돌! 진행 불가!" << endl;
 				}
 			}
 

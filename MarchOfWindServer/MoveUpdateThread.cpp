@@ -9,18 +9,27 @@ void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw) {
 	int preciseRadius = radius * PRECISION;
 
 
-	pair<int, int> quadrantXZ_1 = make_pair(preciseX + preciseRadius, preciseZ + preciseRadius);
-	pair<int, int> quadrantXZ_2 = make_pair(preciseX - preciseRadius, preciseZ + preciseRadius);
-	pair<int, int> quadrantXZ_3 = make_pair(preciseX - preciseRadius, preciseZ - preciseRadius);
-	pair<int, int> quadrantXZ_4 = make_pair(preciseX + preciseRadius, preciseZ - preciseRadius);
+	//pair<int, int> quadrantXZ_1 = make_pair(preciseX + preciseRadius, preciseZ + preciseRadius);
+	//pair<int, int> quadrantXZ_2 = make_pair(preciseX - preciseRadius, preciseZ + preciseRadius);
+	//pair<int, int> quadrantXZ_3 = make_pair(preciseX - preciseRadius, preciseZ - preciseRadius);
+	//pair<int, int> quadrantXZ_4 = make_pair(preciseX + preciseRadius, preciseZ - preciseRadius);
+	//
+	//int diff = (2 - sqrt(2)) * preciseRadius;
+	//
+	//vector<Point_2> points = {
+	//	Point_2(quadrantXZ_1.first, quadrantXZ_1.second - diff), Point_2(quadrantXZ_1.first - diff, quadrantXZ_1.second),
+	//	Point_2(quadrantXZ_2.first + diff, quadrantXZ_2.second), Point_2(quadrantXZ_2.first, quadrantXZ_2.second - diff),
+	//	Point_2(quadrantXZ_3.first, quadrantXZ_3.second + diff), Point_2(quadrantXZ_3.first + diff, quadrantXZ_3.second),
+	//	Point_2(quadrantXZ_4.first - diff, quadrantXZ_4.second), Point_2(quadrantXZ_4.first, quadrantXZ_4.second + diff),
+	//};
 
-	int diff = (2 - sqrt(2)) * preciseRadius;
+	int diff = preciseRadius / sqrt(2);
 
 	vector<Point_2> points = {
-		Point_2(quadrantXZ_1.first, quadrantXZ_1.second - diff), Point_2(quadrantXZ_1.first - diff, quadrantXZ_1.second),
-		Point_2(quadrantXZ_2.first + diff, quadrantXZ_2.second), Point_2(quadrantXZ_2.first, quadrantXZ_2.second - diff),
-		Point_2(quadrantXZ_3.first, quadrantXZ_3.second + diff), Point_2(quadrantXZ_3.first + diff, quadrantXZ_3.second),
-		Point_2(quadrantXZ_4.first - diff, quadrantXZ_4.second), Point_2(quadrantXZ_4.first, quadrantXZ_4.second + diff),
+		Point_2(preciseX + diff, preciseZ + diff), Point_2(preciseX, preciseZ + preciseRadius),
+		Point_2(preciseX - diff, preciseZ + diff), Point_2(preciseX - preciseRadius, preciseZ),
+		Point_2(preciseX - diff, preciseZ - diff), Point_2(preciseX, preciseZ - preciseRadius),
+		Point_2(preciseX + diff, preciseZ - diff), Point_2(preciseX + preciseRadius, preciseZ)
 	};
 
 	Polygon_2 polygon(points.begin(), points.end());
@@ -30,7 +39,7 @@ void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw) {
 	for (int x = bbox.xmin(); x <= bbox.xmax(); x++) {
 		for (int z = bbox.ymin(); z <= bbox.ymax(); z++) {
 			Point_2 p(x, z);
-			if (polygon.has_on_bounded_side(p) || polygon.has_on_boundary(p)) {
+			if (polygon.has_on_boundary(p)) {
 				if (draw) {
 					m_UnitColliderCountMap[z][x] += 1;
 				}
@@ -51,39 +60,55 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 	int preciseX = x * PRECISION;
 	int preciseZ = z * PRECISION;
 	int preciseRadius = radius * PRECISION;
-	int diff = (2 - sqrt(2)) * preciseRadius;
 
 	// 새로운 팔각형 꼭지점 좌표
 	int preciseNX = nx * PRECISION;
 	int preciseNZ = nz * PRECISION;
 
+	//int diff = (2 - sqrt(2)) * preciseRadius;
+	int diff = preciseRadius / sqrt(2);
+
 	if (preciseX == preciseNX && preciseZ == preciseNZ) {
 		return true;
 	}
 
-	pair<int, int> quadrantXZ_1 = make_pair(preciseX + preciseRadius, preciseZ + preciseRadius);
-	pair<int, int> quadrantXZ_2 = make_pair(preciseX - preciseRadius, preciseZ + preciseRadius);
-	pair<int, int> quadrantXZ_3 = make_pair(preciseX - preciseRadius, preciseZ - preciseRadius);
-	pair<int, int> quadrantXZ_4 = make_pair(preciseX + preciseRadius, preciseZ - preciseRadius);
-
+	//pair<int, int> quadrantXZ_1 = make_pair(preciseX + preciseRadius, preciseZ + preciseRadius);
+	//pair<int, int> quadrantXZ_2 = make_pair(preciseX - preciseRadius, preciseZ + preciseRadius);
+	//pair<int, int> quadrantXZ_3 = make_pair(preciseX - preciseRadius, preciseZ - preciseRadius);
+	//pair<int, int> quadrantXZ_4 = make_pair(preciseX + preciseRadius, preciseZ - preciseRadius);
+	//
+	//
+	//vector<Point_2> points = {
+	//	Point_2(quadrantXZ_1.first, quadrantXZ_1.second - diff), Point_2(quadrantXZ_1.first - diff, quadrantXZ_1.second),
+	//	Point_2(quadrantXZ_2.first + diff, quadrantXZ_2.second), Point_2(quadrantXZ_2.first, quadrantXZ_2.second - diff),
+	//	Point_2(quadrantXZ_3.first, quadrantXZ_3.second + diff), Point_2(quadrantXZ_3.first + diff, quadrantXZ_3.second),
+	//	Point_2(quadrantXZ_4.first - diff, quadrantXZ_4.second), Point_2(quadrantXZ_4.first, quadrantXZ_4.second + diff),
+	//};
+	//
+	//pair<int, int> quadrantNXZ_1 = make_pair(preciseNX + preciseRadius, preciseNZ + preciseRadius);
+	//pair<int, int> quadrantNXZ_2 = make_pair(preciseNX - preciseRadius, preciseNZ + preciseRadius);
+	//pair<int, int> quadrantNXZ_3 = make_pair(preciseNX - preciseRadius, preciseNZ - preciseRadius);
+	//pair<int, int> quadrantNXZ_4 = make_pair(preciseNX + preciseRadius, preciseNZ - preciseRadius);
+	//
+	//vector<Point_2> pointsNew = {
+	//	Point_2(quadrantNXZ_1.first, quadrantNXZ_1.second - diff), Point_2(quadrantNXZ_1.first - diff, quadrantNXZ_1.second),
+	//	Point_2(quadrantNXZ_2.first + diff, quadrantNXZ_2.second), Point_2(quadrantNXZ_2.first, quadrantNXZ_2.second - diff),
+	//	Point_2(quadrantNXZ_3.first, quadrantNXZ_3.second + diff), Point_2(quadrantNXZ_3.first + diff, quadrantNXZ_3.second),
+	//	Point_2(quadrantNXZ_4.first - diff, quadrantNXZ_4.second), Point_2(quadrantNXZ_4.first, quadrantNXZ_4.second + diff),
+	//};
 
 	vector<Point_2> points = {
-		Point_2(quadrantXZ_1.first, quadrantXZ_1.second - diff), Point_2(quadrantXZ_1.first - diff, quadrantXZ_1.second),
-		Point_2(quadrantXZ_2.first + diff, quadrantXZ_2.second), Point_2(quadrantXZ_2.first, quadrantXZ_2.second - diff),
-		Point_2(quadrantXZ_3.first, quadrantXZ_3.second + diff), Point_2(quadrantXZ_3.first + diff, quadrantXZ_3.second),
-		Point_2(quadrantXZ_4.first - diff, quadrantXZ_4.second), Point_2(quadrantXZ_4.first, quadrantXZ_4.second + diff),
+		Point_2(preciseX + diff, preciseZ + diff), Point_2(preciseX, preciseZ + preciseRadius),
+		Point_2(preciseX - diff, preciseZ + diff), Point_2(preciseX - preciseRadius, preciseZ),
+		Point_2(preciseX - diff, preciseZ - diff), Point_2(preciseX, preciseZ - preciseRadius),
+		Point_2(preciseX + diff, preciseZ - diff), Point_2(preciseX + preciseRadius, preciseZ)
 	};
 
-	pair<int, int> quadrantNXZ_1 = make_pair(preciseNX + preciseRadius, preciseNZ + preciseRadius);
-	pair<int, int> quadrantNXZ_2 = make_pair(preciseNX - preciseRadius, preciseNZ + preciseRadius);
-	pair<int, int> quadrantNXZ_3 = make_pair(preciseNX - preciseRadius, preciseNZ - preciseRadius);
-	pair<int, int> quadrantNXZ_4 = make_pair(preciseNX + preciseRadius, preciseNZ - preciseRadius);
-
 	vector<Point_2> pointsNew = {
-		Point_2(quadrantNXZ_1.first, quadrantNXZ_1.second - diff), Point_2(quadrantNXZ_1.first - diff, quadrantNXZ_1.second),
-		Point_2(quadrantNXZ_2.first + diff, quadrantNXZ_2.second), Point_2(quadrantNXZ_2.first, quadrantNXZ_2.second - diff),
-		Point_2(quadrantNXZ_3.first, quadrantNXZ_3.second + diff), Point_2(quadrantNXZ_3.first + diff, quadrantNXZ_3.second),
-		Point_2(quadrantNXZ_4.first - diff, quadrantNXZ_4.second), Point_2(quadrantNXZ_4.first, quadrantNXZ_4.second + diff),
+		Point_2(preciseNX + diff, preciseNZ + diff), Point_2(preciseNX, preciseNZ + preciseRadius),
+		Point_2(preciseNX - diff, preciseNZ + diff), Point_2(preciseNX - preciseRadius, preciseNZ),
+		Point_2(preciseNX - diff, preciseNZ - diff), Point_2(preciseNX, preciseNZ - preciseRadius),
+		Point_2(preciseNX + diff, preciseNZ - diff), Point_2(preciseNX + preciseRadius, preciseNZ)
 	};
 
 	Polygon_2 polygon(points.begin(), points.end());
@@ -97,13 +122,26 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 	CGAL::intersection(polygon, polygonNew, std::back_inserter(intersections));
 
 	if (intersections.size() == 0) {
-		CGAL::Bbox_2 newBbox = polygonNew.bbox();
-		for (int x = newBbox.xmin(); x <= newBbox.xmax(); x++) {
-			for (int z = newBbox.ymin(); z <= newBbox.ymax(); z++) {
-				Point_2 p(x, z);
-				if (polygonNew.has_on_bounded_side(p)) {
-					if (m_UnitColliderCountMap[z][x] > 0) {
-						return false;
+
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		// 조건 추가
+		// => 중심 좌표가 약간 다른 상태에서 거의 겹친 상태, 이 경우 아래 newBox에 포함된 좌표가 이미 표시된 좌표일 수 있음. 
+		// (+ 표시되는 선분의 좌표는 정수이기에 정확한 일직선이 아님)
+		int distance = sqrt(pow(preciseX - preciseNX, 2) + pow(preciseZ - preciseNZ, 2));
+		if (distance < preciseRadius * 2) {
+			//return true;
+		}
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		else {
+
+			CGAL::Bbox_2 newBbox = polygonNew.bbox();
+			for (int x = newBbox.xmin(); x <= newBbox.xmax(); x++) {
+				for (int z = newBbox.ymin(); z <= newBbox.ymax(); z++) {
+					Point_2 p(x, z);
+					if (polygonNew.has_on_bounded_side(p)) {
+						if (m_UnitColliderCountMap[z][x] > 0) {
+							return false;
+						}
 					}
 				}
 			}
@@ -137,7 +175,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		for (int x = drawBox.xmin(); x <= drawBox.xmax(); x++) {
 			for (int z = drawBox.ymin(); z <= drawBox.ymax(); z++) {
 				Point_2 p(x, z);
-				if (polygonNew.has_on_bounded_side(p) || polygonNew.has_on_boundary(p)) {
+				if (polygonNew.has_on_boundary(p)) {
 					m_UnitColliderCountMap[z][x] += 1;
 				}
 			}
@@ -146,7 +184,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		for (int x = delBox.xmin(); x <= delBox.xmax(); x++) {
 			for (int z = delBox.ymin(); z <= delBox.ymax(); z++) {
 				Point_2 p(x, z);
-				if (polygon.has_on_bounded_side(p) || polygon.has_on_boundary(p)) {
+				if (polygon.has_on_boundary(p)) {
 					m_UnitColliderCountMap[z][x] -= 1;
 				}
 			}
@@ -175,7 +213,9 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 			for (int x = bbox.xmin(); x <= bbox.xmax(); x++) {
 				for (int z = bbox.ymin(); z <= bbox.ymax(); z++) {
 					Point_2 p(x, z);
-					if (poly.has_on_bounded_side(p)) {
+					//if (poly.has_on_bounded_side(p)) {
+					// => 조건 추가, 기존 팔각형과 다르게 팔각형의 테구리 각도가 45도가 아니기에 기존 테두리를 포함할 수 있다.
+					if(poly.has_on_bounded_side(p) && polygon.has_on_boundary(p) == false) {
 						if (m_UnitColliderCountMap[z][x] > 0) {
 							return false;
 						}
@@ -227,7 +267,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		for (int x = drawBox.xmin(); x <= drawBox.xmax(); x++) {
 			for (int z = drawBox.ymin(); z <= drawBox.ymax(); z++) {
 				Point_2 p(x, z);
-				if (polygonNew.has_on_bounded_side(p) || polygonNew.has_on_boundary(p)) {
+				if (polygonNew.has_on_boundary(p)) {
 					m_UnitColliderCountMap[z][x] += 1;
 				}
 			}
@@ -236,7 +276,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 		for (int x = delBox.xmin(); x <= delBox.xmax(); x++) {
 			for (int z = delBox.ymin(); z <= delBox.ymax(); z++) {
 				Point_2 p(x, z);
-				if (polygon.has_on_bounded_side(p) || polygon.has_on_boundary(p)) {
+				if (polygon.has_on_boundary(p)) {
 					m_UnitColliderCountMap[z][x] -= 1;
 				}
 			}
