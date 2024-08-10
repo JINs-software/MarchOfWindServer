@@ -72,7 +72,7 @@ private:
 
 	void SendExistingUnits(SessionID64 sessionID);
 
-	void Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* target, int attackType);
+	void Attack(SessionID64 sessionID, UnitInfo* attacker, const pair<float, float>& attackerPos, UnitInfo* target, int attackType);
 	void Damage(UnitInfo* target, int damage);
 
 	inline float GetDistance(float x, float z, float tx, float tz) {

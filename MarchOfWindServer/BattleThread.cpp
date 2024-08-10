@@ -319,7 +319,7 @@ void BattleThread::Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg)
 		auto targetIter = m_UnitInfos.find(msg.targetID);
 		if (targetIter != m_UnitInfos.end()) {
 			UnitInfo* targetUnitInfo = targetIter->second;
-			Attack(sessionID, unitInfo, targetUnitInfo, msg.attackType);
+			Attack(sessionID, unitInfo, unitPosition, targetUnitInfo, msg.attackType);
 		}
 	}
 }
@@ -431,10 +431,8 @@ void BattleThread::SendExistingUnits(SessionID64 sessionID)
 	}
 }
 
-void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* target, int attackType)
+void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, const pair<float, float>& attackerPos, UnitInfo* target, int attackType)
 {
-	pair<float, float> attackerPosition = attacker->GetPostion();
-
 	// 시간 판정
 	if (attacker->CanAttack(clock())) {
 		// 공격 패킷 전달		
@@ -443,8 +441,8 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 		body->type = enPacketType::S_MGR_ATTACK;
 		body->unitID = attacker->ID;
 		body->team = attacker->team;
-		body->posX = attackerPosition.first;
-		body->posZ = attackerPosition.second;
+		body->posX = attackerPos.first;
+		body->posZ = attackerPos.second;
 		body->normX = attacker->normX;
 		body->normZ = attacker->normZ;
 		body->targetID = target->ID;
@@ -455,7 +453,8 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 
 		// 거리 판정
 		pair<float, float> targetPostion = target->GetPostion();
-		float distanceToTarget = GetDistance(attackerPosition.first, attackerPosition.second, targetPostion.first, targetPostion.second);
+		float distanceToTarget = GetDistance(attackerPos.first, attackerPos.second, targetPostion.first, targetPostion.second);
+		distanceToTarget -= attacker->radius;
 		distanceToTarget -= target->radius;
 		if (distanceToTarget <= attacker->attackDist) {
 			// 대미지 패킷 전달
@@ -478,8 +477,8 @@ void BattleThread::Attack(SessionID64 sessionID, UnitInfo* attacker, UnitInfo* t
 		MSG_S_MGR_ATTACK_INVALID* body = atkInvalidMSG->DirectReserve<MSG_S_MGR_ATTACK_INVALID>();
 		body->type = enPacketType::S_MGR_ATTACK_INVALID;
 		body->unitID = attacker->ID;
-		body->posX = attackerPosition.first;
-		body->posZ = attackerPosition.second;
+		body->posX = attackerPos.first;
+		body->posZ = attackerPos.second;
 		body->normX = attacker->normX;
 		body->normZ = attacker->normZ;
 
