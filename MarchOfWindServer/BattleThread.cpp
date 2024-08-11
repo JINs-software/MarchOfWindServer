@@ -94,9 +94,9 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_SYNC_POSITION(sessionID, msg);
 		}
 		break;
-		case enPacketType::UNIT_S_DIR_CHANGE:
+		case enPacketType::UNIT_S_SYNC_DIRECTION:
 		{
-			MSG_UNIT_S_DIR_CHANGE msg;
+			MSG_UNIT_S_SYNC_DIRECTION msg;
 			recvData >> msg;
 			Proc_DIR_CHANGE(sessionID, msg);
 		}
@@ -173,11 +173,12 @@ void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNI
 	body->posZ = msg.posZ;
 	body->normX = msg.normX;
 	body->normZ = msg.normZ;
-	body->speed = unitInfo->speed;								// temp
-	body->maxHP = unitInfo->hp;								// temp
+	body->speed = unitInfo->speed;
+	body->nowHP = unitInfo->hp;
+	body->maxHP = unitInfo->hp;								
 	body->radius = unitInfo->radius;
-	body->attackDistance = unitInfo->attackDist;	// temp
-	body->attackRate = unitInfo->attackRate;		// temp
+	body->attackDistance = unitInfo->attackDist;	
+	body->attackRate = unitInfo->attackRate;		
 	body->attackDelay = unitInfo->attackDelay;
 	
 	BroadcastToGameManager(crtMsg);
@@ -193,35 +194,11 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 		}
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
-		
-		//unitInfo->SetNorm(msg.normX, msg.normZ);
-		//if (msg.moveType == enUnitMoveType::Move_Start) {
-		//	unitInfo->moving = true;
-		//}
-		//else {
-		//	unitInfo->moving = false;
-		//}
-		//
-		//pair<float, float> unitPosition = unitInfo->GetPostion();
-		//float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
-		//if (diff < AcceptablePositionDiff) { 
-		//	unitInfo->ResetPostion(msg.posX, msg.posZ);
-		//	unitPosition.first = msg.posX;
-		//	unitPosition.second = msg.posZ;
-		//}
-		//else {
-		//	if (msg.moveType == enUnitMoveType::Move_Start) {
-		//		cout << "[MOVE START SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
-		//	}
-		//	else {
-		//		cout << "[MOVE STOP  SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
-		//	}
-		//}
 
 		if (msg.moveType == enUnitMoveType::Move_Start) {
 			unitInfo->moving = true;
 		}
-		else {
+		else if(msg.moveType == enUnitMoveType::Move_Stop) {
 			unitInfo->moving = false;
 		}
 
@@ -236,8 +213,11 @@ void BattleThread::Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg)
 			if (msg.moveType == enUnitMoveType::Move_Start) {
 				cout << "[MOVE START SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
 			}
-			else {
+			else if(msg.moveType == enUnitMoveType::Move_Stop) {
 				cout << "[MOVE STOP  SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+			}
+			else {
+				cout << "[DIR CHANGE  SYNC] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
 			}
 		}
 
@@ -276,7 +256,7 @@ void BattleThread::Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POS
 	}
 }
 
-void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE& msg)
+void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg)
 {
 	auto iter = m_SessionToUnitIdMap.find(sessionID);
 	if (iter != m_SessionToUnitIdMap.end()) {
@@ -289,7 +269,9 @@ void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_DIR_CHANGE&
 
 		//unitInfo->ResetPostion(msg.posX, msg.posZ);
 		//unitInfo->SetNorm(msg.normX, msg.normZ);
-		unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
+		//unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
+		unitInfo->normX = msg.normX;
+		unitInfo->normZ = msg.normZ;
 	}
 }
 
@@ -409,21 +391,26 @@ void BattleThread::BroadcastToGameManager(JBuffer* msg)
 void BattleThread::SendExistingUnits(SessionID64 sessionID)
 {
 	for (auto unitPair : m_UnitInfos) {
-		UnitInfo* unit = unitPair.second;
+		UnitInfo* unitInfo = unitPair.second;
 
 		JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_CREATE_UNIT));
 		MSG_S_MGR_CREATE_UNIT* body = crtMsg->DirectReserve< MSG_S_MGR_CREATE_UNIT>();
 		body->type = enPacketType::S_MGR_CREATE_UNIT;
 		body->crtCode = 0;
-		body->unitID = unit->ID;
-		body->unitType = unit->unitType;
-		body->team = unit->team;
-		body->posX = unit->posX;
-		body->posZ = unit->posZ;
-		body->normX = unit->normX;
-		body->normZ = unit->normZ;
-		body->speed = unit->speed;
-		body->maxHP = unit->hp;
+		body->unitID = unitInfo->ID;
+		body->unitType = unitInfo->unitType;
+		body->team = unitInfo->team;
+		body->posX = unitInfo->posX;
+		body->posZ = unitInfo->posZ;
+		body->normX = unitInfo->normX;
+		body->normZ = unitInfo->normZ;
+		body->speed = unitInfo->speed;			
+		body->nowHP = unitInfo->hp;
+		body->maxHP = UnitDatas[unitInfo->unitType].HP;
+		body->radius = unitInfo->radius;
+		body->attackDistance = unitInfo->attackDist;	
+		body->attackRate = unitInfo->attackRate;	
+		body->attackDelay = unitInfo->attackDelay;
 
 		if (!SendPacket(sessionID, crtMsg)) {
 			FreeSerialBuff(crtMsg);
@@ -568,9 +555,11 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 		MSG_S_MONT_COLLIDER_MAP_RENEW* renewBody =  renewMsg->DirectReserve<MSG_S_MONT_COLLIDER_MAP_RENEW>();
 		renewBody->type = enPacketType::S_MONT_COLLIDER_MAP_RENEW;
 		for (const auto player : battleThread->m_PlayerInfos) {
-			battleThread->AddRefSerialBuff(renewMsg);
-			if (!battleThread->SendPacket(player.second.sessionID, renewMsg)) {
-				battleThread->FreeSerialBuff(renewMsg);
+			if (player.second.inBattle) {
+				battleThread->AddRefSerialBuff(renewMsg);
+				if (!battleThread->SendPacket(player.second.sessionID, renewMsg)) {
+					battleThread->FreeSerialBuff(renewMsg);
+				}
 			}
 		}
 		battleThread->FreeSerialBuff(renewMsg);
@@ -588,9 +577,11 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 			memcpy(body->colliders, positions[i].data(), sizeof(Position) * positions[i].size());
 
 			for (const auto player : battleThread->m_PlayerInfos) {
-				battleThread->AddRefSerialBuff(msg);
-				if (!battleThread->SendPacket(player.second.sessionID, msg)) {
-					battleThread->FreeSerialBuff(msg);
+				if (player.second.inBattle) {
+					battleThread->AddRefSerialBuff(msg);
+					if (!battleThread->SendPacket(player.second.sessionID, msg)) {
+						battleThread->FreeSerialBuff(msg);
+					}
 				}
 			}
 			battleThread->FreeSerialBuff(msg);

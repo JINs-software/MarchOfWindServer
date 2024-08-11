@@ -34,7 +34,7 @@ enum enPacketType
 	UNIT_S_MOVE,
 	S_MGR_MOVE,
 	UNIT_S_SYNC_POSITION,
-	UNIT_S_DIR_CHANGE,
+	UNIT_S_SYNC_DIRECTION,
 	UNIT_S_ATTACK,
 	S_MGR_ATTACK,
 	S_MGR_ATTACK_INVALID,
@@ -120,8 +120,8 @@ enum enUnitType
 enum enUnitMoveType
 {
 	Move_Start,
-	Move_Change_Dir,
 	Move_Stop,
+	Move_Change_Dir,
 };
 
 enum enUnitAttackType
@@ -254,6 +254,7 @@ struct MSG_S_MGR_CREATE_UNIT
 	float normX;
 	float normZ;
 	float speed;
+	INT nowHP;
 	INT maxHP;
 	float radius;
 	float attackDistance;
@@ -297,11 +298,9 @@ struct MSG_UNIT_S_SYNC_POSITION
 	float normZ;
 };
 
-struct MSG_UNIT_S_DIR_CHANGE
+struct MSG_UNIT_S_SYNC_DIRECTION
 {
 	WORD type;
-	float posX;
-	float posZ;
 	float normX;
 	float normZ;
 };
