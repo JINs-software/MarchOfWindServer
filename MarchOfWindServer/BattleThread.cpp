@@ -94,11 +94,18 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_SYNC_POSITION(sessionID, msg);
 		}
 		break;
+		case enPacketType::UNIT_S_REQ_TRACE_PATH_FINDING: 
+		{
+			MSG_UNIT_S_REQ_TRACE_PATH_FINDING msg;
+			recvData >> msg;
+			Proc_REQ_TRACING_PATH_FINDING(sessionID, msg);
+		}
+		break;
 		case enPacketType::UNIT_S_SYNC_DIRECTION:
 		{
 			MSG_UNIT_S_SYNC_DIRECTION msg;
 			recvData >> msg;
-			Proc_DIR_CHANGE(sessionID, msg);
+			Proc_SYNC_DIRECTION(sessionID, msg);
 		}
 		break;
 		case enPacketType::UNIT_S_ATTACK:
@@ -256,7 +263,7 @@ void BattleThread::Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POS
 	}
 }
 
-void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg)
+void BattleThread::Proc_SYNC_DIRECTION(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg)
 {
 	auto iter = m_SessionToUnitIdMap.find(sessionID);
 	if (iter != m_SessionToUnitIdMap.end()) {
@@ -272,6 +279,33 @@ void BattleThread::Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECT
 		//unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
 		unitInfo->normX = msg.normX;
 		unitInfo->normZ = msg.normZ;
+	}
+}
+
+void BattleThread::Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT_S_REQ_TRACE_PATH_FINDING& msg)
+{
+	auto iter = m_SessionToUnitIdMap.find(sessionID);
+	if (iter != m_SessionToUnitIdMap.end()) {
+		UnitID unitID = iter->second;
+		if (m_UnitInfos.find(unitID) == m_UnitInfos.end()) {
+			DebugBreak();
+		}
+
+		UnitInfo* unitInfo = m_UnitInfos[unitID];
+
+		pair<float, float> unitPosition = unitInfo->GetPostion();
+		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
+		if (diff < AcceptablePositionDiff) {
+			unitInfo->ResetTransformJob(msg.posX, msg.posZ, msg.normX, msg.normZ);
+			unitPosition.first = msg.posX;
+			unitPosition.second = msg.posZ;
+		}
+		else {
+			cout << "[REQ_TRACING_PATH_FINDING] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
+		}
+
+		unitInfo->RequestTracePathFinding(unitPosition.first, unitPosition.second, msg.destX, msg.destZ);
+		unitInfo->pathPending = true;
 	}
 }
 

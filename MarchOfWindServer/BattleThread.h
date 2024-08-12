@@ -27,11 +27,12 @@ private:
 	};
 	std::map<SessionID64, PlayerInfo> m_PlayerInfos;
 
-	// 업데이트 스레드
-	MoveUpdateThread* m_UpdateThread;
 	std::map<SessionID64, UnitID> m_SessionToUnitIdMap;
 	std::map<UnitID, UnitObject*> m_UnitObjects;
 	std::map<UnitID, UnitInfo*> m_UnitInfos;
+
+	// 업데이트 스레드
+	MoveUpdateThread* m_UpdateThread;
 	
 	int m_UnitAllocID = 0;
 
@@ -60,7 +61,8 @@ private:
 	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
 	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
 	void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
-	void Proc_DIR_CHANGE(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg);
+	void Proc_SYNC_DIRECTION(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg);
+	void Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT_S_REQ_TRACE_PATH_FINDING& msg);
 	void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
 	void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
 	void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);

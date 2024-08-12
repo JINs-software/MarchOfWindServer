@@ -76,6 +76,11 @@
       "UNIT_S_SYNC_POSITION",
       "UNIT_S_SYNC_DIRECTION",
 
+      "UNIT_S_REQ_TRACE_PATH_FINDING",
+      "S_MGR_REPLY_TRACE_PATH_FINDING",
+
+      "UNIT_S_RESET_TREAD_PATH_FINDING",
+
       "UNIT_S_ATTACK",
       "S_MGR_ATTACK",
       "S_MGR_ATTACK_INVALID",
@@ -714,6 +719,60 @@
     "type": "message",
     "name": "MSG_UNIT_S_SYNC_DIRECTION",
     "field": [
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      }
+    ]
+  },
+
+  "UNIT_S_REQ_TRACE_PATH_FINDING": {
+    "type": "message",
+    "name": "MSG_UNIT_S_REQ_TRACE_PATH_FINDING",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
+      {
+        "type": "float",
+        "name": "normX"
+      },
+      {
+        "type": "float",
+        "name": "normZ"
+      },
+      {
+        "type": "float",
+        "name": "destX"
+      },
+      {
+        "type": "float",
+        "name": "destZ"
+      }
+    ]
+  },
+
+  "S_MGR_REPLY_TRACE_PATH_FINDING": {
+    "type": "message",
+    "name": "MSG_S_MGR_REPLY_TRACE_PATH_FINDING",
+    "field": [
+      {
+        "type": "float",
+        "name": "posX"
+      },
+      {
+        "type": "float",
+        "name": "posZ"
+      },
       {
         "type": "float",
         "name": "normX"

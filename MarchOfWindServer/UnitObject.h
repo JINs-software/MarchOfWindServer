@@ -30,6 +30,10 @@ struct UnitInfo {
 
 	bool moving;
 
+	bool hasPath;
+	bool pathPending;
+
+
 	SRWLOCK TransformSRWLock;
 
 	MoveUpdateThread* UpdateThread;
@@ -44,8 +48,13 @@ struct UnitInfo {
 	std::queue<stResetTransformJob>	JobQueue;
 	std::mutex						JobQueueMtx;
 
+	std::queue<PathFindingParams>	PathFindingQueue;
+	std::mutex						PathFindingQueueMtx;
+
 	UnitInfo(MoveUpdateThread* updateThread) {
 		moving = false;
+		hasPath = false;
+		pathPending = false;
 		UpdateThread = updateThread;
 		InitializeSRWLock(&TransformSRWLock);
 	}
@@ -64,6 +73,17 @@ struct UnitInfo {
 	void ResetTransformJob(float newPosX, float newPosZ, float newNormX, float newNormZ) {
 		std::lock_guard<std::mutex> lockGuard(JobQueueMtx);
 		JobQueue.push({ newPosX, newPosZ, newNormX, newNormZ });
+	}
+	
+	void RequestTracePathFinding(float posX, float posZ, float destX, float destZ) {
+		std::lock_guard<std::mutex> lockGuard(PathFindingQueueMtx);
+		PathFindingParams params = {
+			{posX, posZ},
+			radius,
+			attackDist,
+			{destX, destZ}
+		};
+		PathFindingQueue.push(params);
 	}
 
 	/*
@@ -150,60 +170,73 @@ private:
 	}
 
 	virtual void OnUpdate(float deltaTime) override {
-		while (!m_UnitInfo->JobQueue.empty()) {
-			m_UnitInfo->JobQueueMtx.lock();
-			const UnitInfo::stResetTransformJob& job = m_UnitInfo->JobQueue.front();
-			m_UnitInfo->JobQueue.pop();
-			m_UnitInfo->JobQueueMtx.unlock();
+		if (!m_UnitInfo->PathFindingQueue.empty()) {
+			lock_guard<mutex> lockGuard(m_UnitInfo->PathFindingQueueMtx);
+			PathFindingParams params = m_UnitInfo->PathFindingQueue.front();
 
-			UpdateThread->ResetCollder(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, false, colliders);
-			//string log = "UpdateThread->ResetCollder(" + to_string(m_UnitInfo->posX) + ", " + to_string(m_UnitInfo->posZ) + ", " + to_string(m_UnitInfo->radius) + ", false, colliders); ";
-			//logs.push_back(log);
-			//string colliderLog = "";
-			//for (const auto& p : colliders) {
-			//	colliderLog += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
-			//}
-			//logs.push_back(colliderLog);
+			UpdateThread->AllocTracePathFindingWork(params);
 
-			UpdateThread->ResetCollder(job.newPosX, job.newPosZ, m_UnitInfo->radius, true, colliders);
-			//log = "UpdateThread->ResetCollder(" + to_string(job.newPosX) + ", " + to_string(job.newPosZ) + ", " + to_string(m_UnitInfo->radius) + ", true, colliders); ";
-			//logs.push_back(log);
-			//string colliderLog2 = "";
-			//for (const auto& p : colliders) {
-			//	colliderLog2 += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
-			//}
-			//logs.push_back(colliderLog2);
-
-			AcquireSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
-			m_UnitInfo->posX = job.newPosX;
-			m_UnitInfo->posZ = job.newPosZ;
-			m_UnitInfo->normX = job.newNormX;
-			m_UnitInfo->normZ = job.newNormZ;
-			ReleaseSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
+			m_UnitInfo->pathPending = true;
 		}
 
-		if (m_UnitInfo->moving) {
-			float newPosX = m_UnitInfo->posX + m_UnitInfo->normX * m_UnitInfo->speed * deltaTime;
-			float newPosZ = m_UnitInfo->posZ + m_UnitInfo->normZ * m_UnitInfo->speed * deltaTime;
+		if (m_UnitInfo->pathPending == false) {
 
-			if (newPosX > 100 && newPosX < 300 && newPosZ > 100 && newPosZ < 300) {
-				if (UpdateThread->MoveCollider(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, newPosX, newPosZ, colliders)) {
-					//string log = "UpdateThread->MoveCollider(" + to_string(m_UnitInfo->posX) + ", " + to_string(m_UnitInfo->posZ) + ", " + to_string(m_UnitInfo->radius) + ", " + to_string(newPosX) + ", " + to_string(newPosZ) + ", colliders)";
-					//logs.push_back(log);
-					//
-					//string colliderLog = "";
-					//for (const auto& p : colliders) {
-					//	colliderLog += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
-					//}
-					//logs.push_back(colliderLog);
 
-					AcquireSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
-					m_UnitInfo->posX = newPosX;
-					m_UnitInfo->posZ = newPosZ;
-					ReleaseSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
-				}
-				else {
-					cout << "[" << clock() << "]: " << "콜라이더 충돌! 진행 불가!" << endl;
+			while (!m_UnitInfo->JobQueue.empty()) {
+				m_UnitInfo->JobQueueMtx.lock();
+				const UnitInfo::stResetTransformJob& job = m_UnitInfo->JobQueue.front();
+				m_UnitInfo->JobQueue.pop();
+				m_UnitInfo->JobQueueMtx.unlock();
+
+				UpdateThread->ResetCollder(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, false, colliders);
+				//string log = "UpdateThread->ResetCollder(" + to_string(m_UnitInfo->posX) + ", " + to_string(m_UnitInfo->posZ) + ", " + to_string(m_UnitInfo->radius) + ", false, colliders); ";
+				//logs.push_back(log);
+				//string colliderLog = "";
+				//for (const auto& p : colliders) {
+				//	colliderLog += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
+				//}
+				//logs.push_back(colliderLog);
+
+				UpdateThread->ResetCollder(job.newPosX, job.newPosZ, m_UnitInfo->radius, true, colliders);
+				//log = "UpdateThread->ResetCollder(" + to_string(job.newPosX) + ", " + to_string(job.newPosZ) + ", " + to_string(m_UnitInfo->radius) + ", true, colliders); ";
+				//logs.push_back(log);
+				//string colliderLog2 = "";
+				//for (const auto& p : colliders) {
+				//	colliderLog2 += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
+				//}
+				//logs.push_back(colliderLog2);
+
+				AcquireSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
+				m_UnitInfo->posX = job.newPosX;
+				m_UnitInfo->posZ = job.newPosZ;
+				m_UnitInfo->normX = job.newNormX;
+				m_UnitInfo->normZ = job.newNormZ;
+				ReleaseSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
+			}
+
+			if (m_UnitInfo->moving) {
+				float newPosX = m_UnitInfo->posX + m_UnitInfo->normX * m_UnitInfo->speed * deltaTime;
+				float newPosZ = m_UnitInfo->posZ + m_UnitInfo->normZ * m_UnitInfo->speed * deltaTime;
+
+				if (newPosX > 100 && newPosX < 300 && newPosZ > 100 && newPosZ < 300) {
+					if (UpdateThread->MoveCollider(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, newPosX, newPosZ, colliders)) {
+						//string log = "UpdateThread->MoveCollider(" + to_string(m_UnitInfo->posX) + ", " + to_string(m_UnitInfo->posZ) + ", " + to_string(m_UnitInfo->radius) + ", " + to_string(newPosX) + ", " + to_string(newPosZ) + ", colliders)";
+						//logs.push_back(log);
+						//
+						//string colliderLog = "";
+						//for (const auto& p : colliders) {
+						//	colliderLog += "{" + to_string(p.first) + ", " + to_string(p.second) + "} ";
+						//}
+						//logs.push_back(colliderLog);
+
+						AcquireSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
+						m_UnitInfo->posX = newPosX;
+						m_UnitInfo->posZ = newPosZ;
+						ReleaseSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
+					}
+					else {
+						cout << "[" << clock() << "]: " << "콜라이더 충돌! 진행 불가!" << endl;
+					}
 				}
 			}
 		}

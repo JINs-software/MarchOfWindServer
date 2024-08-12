@@ -7,6 +7,9 @@
 #include <Windows.h>	
 #include<process.h>
 
+#include "LockFreeQueue.h"
+#include "JBuffer.h"
+
 class GameObject {
 public:
 	virtual ~GameObject() {}
@@ -26,6 +29,8 @@ private:
 
 	std::set<GameObject*> m_ReadyToDestroyObjects;
 	std::mutex m_ReadyToDestroyObjectsMtx;
+
+	LockFreeQueue<std::pair<int, JBuffer*>> m_SendReqMessageQueue;
 
 private:
 	bool m_Exit = false;
@@ -47,7 +52,22 @@ public:
 		m_ReadyToDestroyObjects.insert(gameObject);
 	}
 
+	bool GetSendReqMessage(std::pair<int, JBuffer*>& request) {
+		if (m_SendReqMessageQueue.GetSize() == 0) {
+			return false;
+		}
+		else {
+			m_SendReqMessageQueue.Dequeue(request, true);
+			return true;
+		}
+	}
 
+protected:
+	void PushSendReqMessage(int id, JBuffer* sendMsg) {
+		m_SendReqMessageQueue.Enqueue({ id, sendMsg });
+	}
+
+private:
 	static UINT __stdcall UpdateThreadFunc(void* arg);
 };
 

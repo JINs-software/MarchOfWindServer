@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ExternalIncludePath>$(SolutionDir)..\..\0. Utility\RingBuffer\include;$(SolutionDir)..\..\0. Utility\MemoryPool\include;$(SolutionDir)..\..\0. Utility\JNetLibrary\include;$(SolutionDir)..\..\0. Utility\LockFree\include;$(SolutionDir)..\..\0. Utility\PerformanceCounter\include;$(SolutionDir)..\..\0. Utility\Boost;$(SolutionDir)..\..\0. Utility\CGAL-5.6.1\include;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>$(SolutionDir)..\..\0. Utility\RingBuffer\include;$(SolutionDir)..\..\0. Utility\MemoryPool\include;$(SolutionDir)..\..\0. Utility\JNetLibrary\include;$(SolutionDir)..\..\0. Utility\LockFree\include;$(SolutionDir)..\..\0. Utility\PerformanceCounter\include;$(SolutionDir)..\..\0. Utility\Boost;$(SolutionDir)..\..\0. Utility\CGAL-5.6.1\include;$(SolutionDir)..\..\0. Utility\PathFinderLibrary\include;$(ExternalIncludePath)</ExternalIncludePath>
     <LibraryPath>$(SolutionDir)..\..\0. Utility\Boost\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -142,6 +142,7 @@
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="MoveUpdateThread.h" />
     <ClInclude Include="MOWServer.h" />
+    <ClInclude Include="PathFindingWork.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="ProtocolExt.h" />
     <ClInclude Include="UnitObject.h" />
@@ -155,6 +156,7 @@
     <ClCompile Include="MatchRoomThread.cpp" />
     <ClCompile Include="MoveUpdateThread.cpp" />
     <ClCompile Include="MOWServer.cpp" />
+    <ClCompile Include="PathFindingWork.cpp" />
     <ClCompile Include="UpdateThread.cpp" />
   </ItemGroup>
   <ItemGroup>

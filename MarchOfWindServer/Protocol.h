@@ -35,6 +35,8 @@ enum enPacketType
 	S_MGR_MOVE,
 	UNIT_S_SYNC_POSITION,
 	UNIT_S_SYNC_DIRECTION,
+	UNIT_S_REQ_TRACE_PATH_FINDING,
+	S_MGR_REPLY_TRACE_PATH_FINDING,
 	UNIT_S_ATTACK,
 	S_MGR_ATTACK,
 	S_MGR_ATTACK_INVALID,
@@ -301,6 +303,26 @@ struct MSG_UNIT_S_SYNC_POSITION
 struct MSG_UNIT_S_SYNC_DIRECTION
 {
 	WORD type;
+	float normX;
+	float normZ;
+};
+
+struct MSG_UNIT_S_REQ_TRACE_PATH_FINDING
+{
+	WORD type;
+	float posX;
+	float posZ;
+	float normX;
+	float normZ;
+	float destX;
+	float destZ;
+};
+
+struct MSG_S_MGR_REPLY_TRACE_PATH_FINDING
+{
+	WORD type;
+	float posX;
+	float posZ;
 	float normX;
 	float normZ;
 };
