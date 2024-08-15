@@ -1,8 +1,6 @@
 #pragma once
 #include <minwindef.h>
 
-#include "ProtocolExt.h"
-
 struct PROTOCOL_CONSTANT
 {
 	static const int MAX_OF_PLAYER_NAME_LEN = 32;
@@ -37,6 +35,7 @@ enum enPacketType
 	UNIT_S_SYNC_DIRECTION,
 	UNIT_S_REQ_TRACE_PATH_FINDING,
 	S_MGR_REPLY_TRACE_PATH_FINDING,
+	S_MGR_TRACE_SPATH,
 	UNIT_S_ATTACK,
 	S_MGR_ATTACK,
 	S_MGR_ATTACK_INVALID,
@@ -319,6 +318,12 @@ struct MSG_UNIT_S_REQ_TRACE_PATH_FINDING
 };
 
 struct MSG_S_MGR_REPLY_TRACE_PATH_FINDING
+{
+	WORD type;
+	INT unitID;
+};
+
+struct MSG_S_MGR_TRACE_SPATH
 {
 	WORD type;
 	float posX;

@@ -21,6 +21,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			info.team = enPlayerTeamInBattleField(msg.team);
 ;
 			m_PlayerInfos.insert({ sessionID, info });
+			m_TeamToPlayerInfoMap.insert({ info.team, info });
 		}
 		break;
 		case enPacketType::COM_REQUSET:
@@ -98,7 +99,9 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		{
 			MSG_UNIT_S_REQ_TRACE_PATH_FINDING msg;
 			recvData >> msg;
-			Proc_REQ_TRACING_PATH_FINDING(sessionID, msg);
+			Proc_REQ_TRACING_PATH_FINDING(sessionID, msg);	
+			// => Move Stop 브로드캐스트
+			// => 유닛을 제어하는 플레이어에는 추가로 응답 메시지 송신
 		}
 		break;
 		case enPacketType::UNIT_S_SYNC_DIRECTION:
@@ -292,6 +295,7 @@ void BattleThread::Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT
 		}
 
 		UnitInfo* unitInfo = m_UnitInfos[unitID];
+		unitInfo->moving = false;
 
 		pair<float, float> unitPosition = unitInfo->GetPostion();
 		float diff = GetDistance(unitPosition.first, unitPosition.second, msg.posX, msg.posZ);
@@ -303,6 +307,28 @@ void BattleThread::Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT
 		else {
 			cout << "[REQ_TRACING_PATH_FINDING] cliX: " << msg.posX << ", cliZ: " << msg.posZ << " | servX: " << unitPosition.first << ", servZ: " << unitPosition.second << endl;
 		}
+
+		// 유닛 이동 중지 브로드 캐스트 
+		JBuffer* movMsg = AllocSerialSendBuff(sizeof(MSG_S_MGR_MOVE));
+		MSG_S_MGR_MOVE* body = movMsg->DirectReserve<MSG_S_MGR_MOVE>();
+		body->type = enPacketType::S_MGR_MOVE;
+		body->unitID = unitInfo->ID;
+		body->team = unitInfo->team;
+		body->moveType = enUnitMoveType::Move_Stop;
+		body->posX = unitPosition.first;
+		body->posZ = unitPosition.second;
+		body->normX = unitInfo->normX;
+		body->normZ = unitInfo->normZ;
+		body->speed = unitInfo->speed;
+		body->destX = msg.destX;
+		body->destZ = msg.destZ;
+		BroadcastToGameManager(movMsg);
+
+		// 유닛 제어 플레이어게는 추가의 응답 메시지 전송
+		JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_S_MGR_REPLY_TRACE_PATH_FINDING));
+		MSG_S_MGR_REPLY_TRACE_PATH_FINDING* replyBody = reply->DirectReserve<MSG_S_MGR_REPLY_TRACE_PATH_FINDING>();
+		replyBody->type = enPacketType::S_MGR_REPLY_TRACE_PATH_FINDING;
+		UnicastToGameManager(reply, unitInfo->team);
 
 		unitInfo->RequestTracePathFinding(unitPosition.first, unitPosition.second, msg.destX, msg.destZ);
 		unitInfo->pathPending = true;
@@ -407,6 +433,20 @@ void BattleThread::BroadcastDieMsg(UnitID targetID)
 	body->unitID = targetID;
 
 	BroadcastToGameManager(dieMsg);
+}
+
+void BattleThread::UnicastToGameManager(JBuffer* msg, int team)
+{
+	if (m_TeamToPlayerInfoMap.find(team) == m_TeamToPlayerInfoMap.end()) {
+		DebugBreak();
+	}
+	else {
+		PlayerInfo playerInfo = m_TeamToPlayerInfoMap[team];
+		SessionID64 sessionID = playerInfo.sessionID;
+		if (!SendPacket(sessionID, msg)) {
+			FreeSerialBuff(msg);
+		}
+	}
 }
 
 void BattleThread::BroadcastToGameManager(JBuffer* msg)

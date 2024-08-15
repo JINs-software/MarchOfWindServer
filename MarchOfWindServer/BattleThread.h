@@ -25,7 +25,8 @@ private:
 		int numOfSelectors = 1;
 		bool inBattle = false;
 	};
-	std::map<SessionID64, PlayerInfo> m_PlayerInfos;
+	std::map<SessionID64, PlayerInfo>	m_PlayerInfos;
+	std::map<int, PlayerInfo>			m_TeamToPlayerInfoMap;
 
 	std::map<SessionID64, UnitID> m_SessionToUnitIdMap;
 	std::map<UnitID, UnitObject*> m_UnitObjects;
@@ -70,6 +71,7 @@ private:
 	void BroadcastDamageMsg(UnitID targetID, int renewHP);
 	void BroadcastDieMsg(UnitID targetID);
 
+	void UnicastToGameManager(JBuffer* msg, int team);
 	void BroadcastToGameManager(JBuffer* msg);
 
 	void SendExistingUnits(SessionID64 sessionID);

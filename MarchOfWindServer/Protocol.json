@@ -78,8 +78,7 @@
 
       "UNIT_S_REQ_TRACE_PATH_FINDING",
       "S_MGR_REPLY_TRACE_PATH_FINDING",
-
-      "UNIT_S_RESET_TREAD_PATH_FINDING",
+      "S_MGR_TRACE_SPATH",
 
       "UNIT_S_ATTACK",
       "S_MGR_ATTACK",
@@ -764,6 +763,17 @@
   "S_MGR_REPLY_TRACE_PATH_FINDING": {
     "type": "message",
     "name": "MSG_S_MGR_REPLY_TRACE_PATH_FINDING",
+    "field": [
+      {
+        "type": "int",
+        "name": "unitID"
+      }
+    ]
+  },
+
+  "S_MGR_TRACE_SPATH": {
+    "type": "message",
+    "name": "MSG_S_MGR_TRACE_SPATH",
     "field": [
       {
         "type": "float",
