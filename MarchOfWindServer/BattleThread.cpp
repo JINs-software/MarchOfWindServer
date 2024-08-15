@@ -100,6 +100,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MSG_UNIT_S_REQ_TRACE_PATH_FINDING msg;
 			recvData >> msg;
 			Proc_REQ_TRACING_PATH_FINDING(sessionID, msg);	
+			// => 기존 해당 유닛에 진행되고 있는 JPS 탐색 중지 및 초기화 
 			// => Move Stop 브로드캐스트
 			// => 유닛을 제어하는 플레이어에는 추가로 응답 메시지 송신
 		}
@@ -330,7 +331,7 @@ void BattleThread::Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT
 		replyBody->type = enPacketType::S_MGR_REPLY_TRACE_PATH_FINDING;
 		UnicastToGameManager(reply, unitInfo->team);
 
-		unitInfo->RequestTracePathFinding(unitPosition.first, unitPosition.second, msg.destX, msg.destZ);
+		unitInfo->RequestTracePathFinding(msg.spathID, unitPosition.first, unitPosition.second, msg.destX, msg.destZ);
 		unitInfo->pathPending = true;
 	}
 }
@@ -661,4 +662,34 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 			battleThread->FreeSerialBuff(msg);
 		}
 	}
+}
+
+UINT __stdcall BattleThread::BatchThreaedFunc(void* arg)
+{
+	BattleThread* battleThread = reinterpret_cast<BattleThread*>(arg);
+	battleThread->AllocTlsMemPool();
+
+	while (true) {
+		std::pair<int, JBuffer*> sendReqMsg;
+		if (battleThread->m_UpdateThread->GetSendReqMessage(sendReqMsg)) {
+			WORD msgType;
+			sendReqMsg.second->Peek(&msgType);
+
+			if (msgType == enPacketType::S_MGR_TRACE_SPATH) {
+				JBuffer* msg = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MGR_TRACE_SPATH));
+				MSG_S_MGR_TRACE_SPATH* body = msg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+				sendReqMsg.second->Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MSG_S_MGR_TRACE_SPATH));
+				
+				// 유닛이 속한 플레이어에게만 전달
+				UnitID unitID = sendReqMsg.first;
+				if (battleThread->m_UnitInfos.find(unitID) != battleThread->m_UnitInfos.end()) {
+					UnitInfo* unitInfo = battleThread->m_UnitInfos[unitID];
+					battleThread->UnicastToGameManager(msg, unitInfo->team);
+				}
+			}
+
+			delete sendReqMsg.second;
+		}
+	}
+	return 0;
 }

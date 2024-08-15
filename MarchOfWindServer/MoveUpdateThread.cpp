@@ -1,5 +1,6 @@
 #include "MoveUpdateThread.h"
 #include "JPSPathFinder.h"
+#include "Protocol.h"
 
 using namespace std;
 
@@ -94,7 +95,7 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 	return true;
 }
 
-void MoveUpdateThread::TracePathFindingFunc(const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath) {
+void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath) {
 	//m_UnitColliderCountMap[z][x]
 
 	int iPosX = position.first * PRECISION;
@@ -186,6 +187,27 @@ void MoveUpdateThread::TracePathFindingFunc(const pair<float, float>& position, 
 	auto iter = jpsPathFinder.FindPath(iPosX, iPosZ, iDestX, iDestZ, trackList);
 	
 	// 메시지 생성
-	// .....
-	//PushSendReqMessage(유닛 아이디, 메시지);
+	while (!iter.End()) {
+		auto p = *iter;
+
+		JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+		MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+		msg->type = enPacketType::S_MGR_TRACE_SPATH;
+		msg->unitID = unitID;
+		msg->posX = p.x / static_cast<float>(PRECISION);
+		msg->posZ = p.y / static_cast<float>(PRECISION);
+		msg->spathState = enSPathStateType::PATH;
+
+		PushSendReqMessage(unitID, sendReqMsg);
+	}
+
+	JBuffer* eopReq = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+	MSG_S_MGR_TRACE_SPATH* eopMsg = eopReq->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+	eopMsg->type = enPacketType::S_MGR_TRACE_SPATH;
+	eopMsg->unitID = unitID;
+	eopMsg->posX = 0.f;
+	eopMsg->posZ = 0.f;
+	eopMsg->spathState = enSPathStateType::END_OF_PATH;
+
+	PushSendReqMessage(unitID, eopReq);
 }

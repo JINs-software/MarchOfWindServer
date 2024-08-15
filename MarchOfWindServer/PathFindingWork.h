@@ -16,9 +16,11 @@ using namespace std;
 #define THREAD_MAX	5
 
 //typedef void (*PathFindingFunc) (const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath);
-typedef std::function<void(const std::pair<float, float>&, float, float, const std::pair<float, float>&, std::vector<std::pair<float, float>>&)> PathFindingFunc;
+typedef std::function<void(int unitID, int spathID, const std::pair<float, float>&, float, float, const std::pair<float, float>&, std::vector<std::pair<float, float>>&)> PathFindingFunc;
 
 typedef struct stPathFindingParams {
+	int unitID;
+	int spathID;
 	pair<float, float> position;
 	float radius;
 	float tolerance;

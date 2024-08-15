@@ -1,5 +1,6 @@
 #pragma once
 #include <minwindef.h>
+#include "ProtocolExt.h"
 
 struct PROTOCOL_CONSTANT
 {
@@ -128,6 +129,12 @@ enum enUnitMoveType
 enum enUnitAttackType
 {
 	ATTACK_NORMAL,
+};
+
+enum enSPathStateType
+{
+	PATH,
+	END_OF_PATH,
 };
 
 #pragma pack(push, 1)
@@ -309,6 +316,7 @@ struct MSG_UNIT_S_SYNC_DIRECTION
 struct MSG_UNIT_S_REQ_TRACE_PATH_FINDING
 {
 	WORD type;
+	INT spathID;
 	float posX;
 	float posZ;
 	float normX;
@@ -321,15 +329,17 @@ struct MSG_S_MGR_REPLY_TRACE_PATH_FINDING
 {
 	WORD type;
 	INT unitID;
+	INT spathID;
 };
 
 struct MSG_S_MGR_TRACE_SPATH
 {
 	WORD type;
+	INT unitID;
+	INT spathID;
 	float posX;
 	float posZ;
-	float normX;
-	float normZ;
+	BYTE spathState;
 };
 
 struct MSG_UNIT_S_ATTACK

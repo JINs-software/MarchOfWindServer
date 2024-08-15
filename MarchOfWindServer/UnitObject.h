@@ -75,9 +75,11 @@ struct UnitInfo {
 		JobQueue.push({ newPosX, newPosZ, newNormX, newNormZ });
 	}
 	
-	void RequestTracePathFinding(float posX, float posZ, float destX, float destZ) {
+	void RequestTracePathFinding(int spathID, float posX, float posZ, float destX, float destZ) {
 		std::lock_guard<std::mutex> lockGuard(PathFindingQueueMtx);
 		PathFindingParams params = {
+			ID,
+			spathID,
 			{posX, posZ},
 			radius,
 			attackDist,

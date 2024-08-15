@@ -67,14 +67,14 @@ public:
 	void AllocTracePathFindingWork(const PathFindingParams& params) {
 		PathFindingJob job;
 		//job.pathFindingFunc = TracePathFindingFunc;	// static TracePathFindingFunc ÇÔ¼ö
-		job.pathFindingFunc = [this](const std::pair<float, float>& position, float radius, float tolerance, const std::pair<float, float>& dest, std::vector<std::pair<float, float>>& resultPath) {
-			this->TracePathFindingFunc(position, radius, tolerance, dest, resultPath);
+		job.pathFindingFunc = [this](int unitID, int spathID, const std::pair<float, float>& position, float radius, float tolerance, const std::pair<float, float>& dest, std::vector<std::pair<float, float>>& resultPath) {
+			this->TracePathFindingFunc(unitID, spathID, position, radius, tolerance, dest, resultPath);
 			};
 		job.params = params;
 		m_PathFindingWorkerPool->AddPathFindingWorkToPool(job);
 	}
 
 private:
-	void TracePathFindingFunc(const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath);
+	void TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath);
 };
 

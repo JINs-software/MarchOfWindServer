@@ -22,7 +22,7 @@ void PathFindingWorkerPool::PathFindingWorkerFunc(LPVOID pParam)
 
 		PathFindingParams params = pathFindingJob.params;
 		vector<pair<float, float>> resultPath;
-		pathFindingJob.pathFindingFunc(params.position, params.radius, params.tolerance, params.destination, resultPath);
+		pathFindingJob.pathFindingFunc(params.unitID, params.spathID, params.position, params.radius, params.tolerance, params.destination, resultPath);
 	}
 }
 

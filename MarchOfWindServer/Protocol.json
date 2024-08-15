@@ -1,6 +1,4 @@
 {
-  "TEMP": null,
-
   "Data Type Mapping": {
     "type": "dataTypeMapping",
     "mapping": [
@@ -36,7 +34,6 @@
       }
     ]
   },
-
 
   "[enum, S<->C] Packet Type": {
     "type": "enum",
@@ -213,6 +210,15 @@
     "name": "enUnitAttackType",
     "field": [
       "ATTACK_NORMAL"
+    ]
+  },
+
+  "[enum] SPath State Type": {
+    "type": "enum",
+    "name": "enSPathStateType",
+    "field": [
+      "PATH",
+      "END_OF_PATH"
     ]
   },
 
@@ -734,6 +740,10 @@
     "name": "MSG_UNIT_S_REQ_TRACE_PATH_FINDING",
     "field": [
       {
+        "type": "int",
+        "name": "spathID"
+      },
+      {
         "type": "float",
         "name": "posX"
       },
@@ -767,6 +777,10 @@
       {
         "type": "int",
         "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "spathID"
       }
     ]
   },
@@ -776,6 +790,14 @@
     "name": "MSG_S_MGR_TRACE_SPATH",
     "field": [
       {
+        "type": "int",
+        "name": "unitID"
+      },
+      {
+        "type": "int",
+        "name": "spathID"
+      },
+      {
         "type": "float",
         "name": "posX"
       },
@@ -784,12 +806,8 @@
         "name": "posZ"
       },
       {
-        "type": "float",
-        "name": "normX"
-      },
-      {
-        "type": "float",
-        "name": "normZ"
+        "type": "BYTE",
+        "name": "spathState"
       }
     ]
   },

@@ -34,6 +34,9 @@ private:
 
 	// 업데이트 스레드
 	MoveUpdateThread* m_UpdateThread;
+
+	// 배치 스레드
+	HANDLE m_BatchThread;
 	
 	int m_UnitAllocID = 0;
 
@@ -44,6 +47,7 @@ private:
 		m_UpdateThread->StartUpdateThread();
 
 		_beginthreadex(NULL, 0, SendUpdatedColliderInfoToMont, this, 0, NULL);
+		m_BatchThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, BatchThreaedFunc, this, 0, NULL));
 	}
 	virtual void OnStop()  override {
 		if (m_UpdateThread != NULL) {
@@ -86,5 +90,7 @@ private:
 
 	// 모니터링
 	static UINT __stdcall SendUpdatedColliderInfoToMont(void* arg);
+
+	static UINT __stdcall BatchThreaedFunc(void* arg);
 };
 
