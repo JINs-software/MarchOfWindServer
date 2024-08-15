@@ -1,22 +1,31 @@
+#include "stdafx.h"
 #include "PathFindingWork.h"
+
+using namespace std;
 
 void PathFindingWorkerPool::AddPathFindingWorkToPool(const PathFindingJob& work)
 {
 	lock_guard<mutex> lockGuard(m_JobQueueMtx);
 	m_PathFindingJobQueue.push(work);
+
+	for (const auto& eventPair : m_ThredIdToEventHndMap) {
+		HANDLE eventHnd = eventPair.second;
+		SetEvent(eventHnd);
+	}
 }
 
-void PathFindingWorkerPool::PathFindingWorkerFunc(LPVOID pParam)
+UINT __stdcall  PathFindingWorkerPool::PathFindingWorkerFunc(void* arg)
 {
 	PathFindingJob pathFindingJob;
-	PathFindingWorkerPool* workerPool = reinterpret_cast<PathFindingWorkerPool*>(pParam);
+	PathFindingWorkerPool* workerPool = reinterpret_cast<PathFindingWorkerPool*>(arg);
 
 	DWORD thrdID = GetCurrentThreadId();
 	HANDLE event = workerPool->m_ThredIdToEventHndMap[thrdID];
 
 	while (true) {
-		if (workerPool->GetWorkFromPool(pathFindingJob)) {
-			WaitForSingleObject(event, INFINITE);
+		WaitForSingleObject(event, INFINITE);
+
+		if (!workerPool->GetWorkFromPool(pathFindingJob)) {
 			continue;
 		}
 

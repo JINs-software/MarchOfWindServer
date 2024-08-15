@@ -1,30 +1,31 @@
 #pragma once
-#include <vector>
-#include <queue>
-#include <map>
-#include <mutex>
+//#include <vector>
+//#include <queue>
+//#include <map>
+//#include <mutex>
+//
+//#include <functional>
+//#include <vector>
+//#include <utility>
+//
+//#include <Windows.h>
+
+//#include "stdafx.h"
 
 #include <functional>
-#include <vector>
-#include <utility>
 
-#include <Windows.h>
-
-using namespace std;
+typedef std::function<void(int unitID, int spathID, const std::pair<float, float>&, float, float, const std::pair<float, float>&, std::vector<std::pair<float, float>>&)> PathFindingFunc;
 
 #define WORK_MAX	10000
 #define THREAD_MAX	5
 
-//typedef void (*PathFindingFunc) (const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath);
-typedef std::function<void(int unitID, int spathID, const std::pair<float, float>&, float, float, const std::pair<float, float>&, std::vector<std::pair<float, float>>&)> PathFindingFunc;
-
 typedef struct stPathFindingParams {
 	int unitID;
 	int spathID;
-	pair<float, float> position;
+	std::pair<float, float> position;
 	float radius;
 	float tolerance;
-	pair<float, float> destination;
+	std::pair<float, float> destination;
 } PathFindingParams;
 
 typedef struct stPathFindingWorker {
@@ -39,22 +40,36 @@ typedef struct stPathFindingJob {
 
 typedef struct stPathFindingResult {
 	int unitID;
-	queue<pair<float, float>> paths;
+	std::queue<std::pair<float, float>> paths;
 } PathFindingResult;
 
 class PathFindingWorkerPool {
 	PathFindingWorker	m_Workers[THREAD_MAX];
 	//HANDLE				m_WorkerHnds[THREAD_MAX];
-	map<DWORD, HANDLE>	m_ThredIdToEventHndMap;
+	std::map<DWORD, HANDLE>	m_ThredIdToEventHndMap;
 
-	queue<stPathFindingJob>		m_PathFindingJobQueue;
-	mutex						m_JobQueueMtx;
+	std::queue<stPathFindingJob>		m_PathFindingJobQueue;
+	std::mutex						m_JobQueueMtx;
 
 public:
+	PathFindingWorkerPool() {
+		for (int i = 0; i < THREAD_MAX; i++) {
+			m_Workers->hThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, PathFindingWorkerFunc, this, CREATE_SUSPENDED, NULL));
+			if (m_Workers->hThread != NULL) {
+				m_Workers->idThread = GetThreadId(m_Workers->hThread);
+
+				HANDLE eventHnd = CreateEvent(NULL, FALSE, FALSE, NULL);
+				m_ThredIdToEventHndMap.insert({ m_Workers->idThread, eventHnd });
+
+				ResumeThread(m_Workers->hThread);
+			}
+		}
+	}
+
 	void AddPathFindingWorkToPool(const PathFindingJob& work);
 
 private:
-	void PathFindingWorkerFunc(LPVOID pParam);
+	static UINT __stdcall PathFindingWorkerFunc(void* arg);
 	bool GetWorkFromPool(PathFindingJob& job);
 };
 

@@ -2,24 +2,19 @@
 
 #include "UpdateThread.h"	
 
-#include <vector>
-#include <mutex>
-#include <mutex>
+//#include <vector>
+//#include <mutex>
+//#include <mutex>
 
-#include <CGAL/Simple_cartesian.h>
-//#include <CGAL/Boolean_set_operations_2.h>
-//#include <CGAL/Polygon_2.h>
-//#include <CGAL/Polygon_with_holes_2.h>
-#include <CGAL/Circle_2.h>
-
-typedef CGAL::Simple_cartesian<int> Kernel;	
-//typedef CGAL::Exact_predicates_exact_constructions_kernel Kernel; // thread-safe?
-//typedef CGAL::Polygon_2<Kernel> Polygon_2;
-//typedef CGAL::Polygon_with_holes_2<Kernel> Polygon_with_holes_2;
-typedef Kernel::Point_2 Point_2;
-typedef CGAL::Circle_2<Kernel> Circle_2;
+//#include <CGAL/Simple_cartesian.h>
+//#include <CGAL/Circle_2.h>
 
 #include "PathFindingWork.h"
+
+//typedef CGAL::Simple_cartesian<int> Kernel;	
+//typedef Kernel::Point_2 Point_2;
+//typedef CGAL::Circle_2<Kernel> Circle_2;
+
 
 using uint16 = unsigned short;
 using SessionID64 = unsigned long long;
@@ -31,6 +26,10 @@ public:
 	static const uint16 RANGE_X = 640;
 	static const uint16 RANGE_Z = 640;
 	static const BYTE PRECISION = 10;
+
+	static const int PRECISE_X = 3001;
+	static const int PRECISE_Z = 3001;
+	// 3000 시 JpsPathFinder init 함수에서 에러 발생 (결함)
 
 	std::vector<std::vector<int>>	m_UnitColliderCountMap;
 	//SRWLOCK							m_UnitColliderCountMapSRWLock;
@@ -75,6 +74,6 @@ public:
 	}
 
 private:
-	void TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath);
+	void TracePathFindingFunc(int unitID, int spathID, const std::pair<float, float>& position, float radius, float tolerance, const std::pair<float, float>& dest, std::vector<std::pair<float, float>>& resultPath);
 };
 

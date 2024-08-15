@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MoveUpdateThread.h"	
-#include <set>
 
 struct UnitInfo {
 	using SessionID64 = unsigned long long ;
@@ -175,6 +174,7 @@ private:
 		if (!m_UnitInfo->PathFindingQueue.empty()) {
 			lock_guard<mutex> lockGuard(m_UnitInfo->PathFindingQueueMtx);
 			PathFindingParams params = m_UnitInfo->PathFindingQueue.front();
+			m_UnitInfo->PathFindingQueue.pop();
 
 			UpdateThread->AllocTracePathFindingWork(params);
 
@@ -235,9 +235,6 @@ private:
 						m_UnitInfo->posX = newPosX;
 						m_UnitInfo->posZ = newPosZ;
 						ReleaseSRWLockExclusive(&m_UnitInfo->TransformSRWLock);
-					}
-					else {
-						cout << "[" << clock() << "]: " << "콜라이더 충돌! 진행 불가!" << endl;
 					}
 				}
 			}

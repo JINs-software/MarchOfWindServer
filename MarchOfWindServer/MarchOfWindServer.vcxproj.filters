@@ -23,6 +23,9 @@
     <ClInclude Include="PathFindingWork.h">
       <Filter>PathFinding</Filter>
     </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>precomiled</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MOWServer.cpp" />
@@ -40,6 +43,9 @@
     <ClCompile Include="PathFindingWork.cpp">
       <Filter>PathFinding</Filter>
     </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>precomiled</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Protocol.json" />
@@ -50,6 +56,9 @@
     </Filter>
     <Filter Include="PathFinding">
       <UniqueIdentifier>{a8fabeff-1529-4cc1-8467-df64de9b05d0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="precomiled">
+      <UniqueIdentifier>{f015fcb2-bf24-4625-9c29-b033ebd88494}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

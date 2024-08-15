@@ -1,6 +1,9 @@
+#include "stdafx.h"
 #include "MoveUpdateThread.h"
+
 #include "JPSPathFinder.h"
 #include "Protocol.h"
+
 
 using namespace std;
 
@@ -95,8 +98,9 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 	return true;
 }
 
+                     //TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath)
 void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath) {
-	//m_UnitColliderCountMap[z][x]
+	cout << "TracePathFindingFunc Start!" << endl;
 
 	int iPosX = position.first * PRECISION;
 	int iPosZ = position.second * PRECISION;
@@ -139,17 +143,17 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	}
 
 	JPSPathFinder<int> jpsPathFinder;
-	jpsPathFinder.Init(3000, 3000);
+	jpsPathFinder.Init(PRECISE_Z, PRECISE_X);
 
-	for (int z = 0; z < 3000; z++) {
+	for (int z = 0; z < PRECISE_Z; z++) {
 		jpsPathFinder.SetObstacle(z, 1000);
 	}
-	for (int x = 0; x < 3000; x++) {
+	for (int x = 0; x < PRECISE_X; x++) {
 		jpsPathFinder.SetObstacle(1000, x);
 	}
 
-	for (int x = 1001; x < 3000; x++) {
-		for (int z = 1001; z < 3000; z++) {
+	for (int x = 1001; x < PRECISE_X; x++) {
+		for (int z = 1001; z < PRECISE_Z; z++) {
 			if (m_UnitColliderCountMap[z][x] > 0) {
 				for (const auto& p : radiusCircleBoundary) {
 					int setX = p.first + x;
@@ -184,16 +188,24 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	}
 
 	vector<PathNode<int>> trackList;
-	auto iter = jpsPathFinder.FindPath(iPosX, iPosZ, iDestX, iDestZ, trackList);
+	auto iter = jpsPathFinder.FindPath(iPosZ, iPosX, iDestZ, iDestX, trackList);
 	
+	// 첫번째 iterator는 시작점?
+	// 시작점은 보내지 않도록
+	if (!iter.End()) {
+		++iter;
+	}
+
 	// 메시지 생성
 	while (!iter.End()) {
 		auto p = *iter;
+		++iter;
 
 		JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
 		MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
 		msg->type = enPacketType::S_MGR_TRACE_SPATH;
 		msg->unitID = unitID;
+		msg->spathID = spathID;
 		msg->posX = p.x / static_cast<float>(PRECISION);
 		msg->posZ = p.y / static_cast<float>(PRECISION);
 		msg->spathState = enSPathStateType::PATH;
@@ -205,9 +217,12 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	MSG_S_MGR_TRACE_SPATH* eopMsg = eopReq->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
 	eopMsg->type = enPacketType::S_MGR_TRACE_SPATH;
 	eopMsg->unitID = unitID;
+	eopMsg->spathID = spathID;
 	eopMsg->posX = 0.f;
 	eopMsg->posZ = 0.f;
 	eopMsg->spathState = enSPathStateType::END_OF_PATH;
 
 	PushSendReqMessage(unitID, eopReq);
+
+	cout << "TracePathFindingFunc Done!" << endl;
 }
