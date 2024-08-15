@@ -167,6 +167,7 @@
       "Team_C",
       "Team_D",
 
+      "Team_Dummy",
       "Team_Test"
     ]
   },
@@ -191,7 +192,8 @@
       "Zerg_Zergling",
       "Zerg_Hydra",
       "Zerg_Golem",
-      "Zerg_Tarantula"
+      "Zerg_Tarantula",
+      "None"
     ]
   },
 
