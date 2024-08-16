@@ -48,6 +48,7 @@ enum enPacketType
 	MGR_UNIT_DIE_REQUEST,
 	S_MONT_COLLIDER_MAP_RENEW,
 	S_MONT_COLLIDER_MAP,
+	S_MONT_JPS_OBSTACLE,
 };
 
 enum enProtocolComRequest
@@ -140,18 +141,25 @@ enum enSPathStateType
 	END_OF_PATH,
 };
 
+enum enJpsObstacleSetting
+{
+	SET,
+	UNSET,
+	CLEAR,
+};
+
 #pragma pack(push, 1)
 
 struct MSG_COM_REQUEST
 {
 	WORD type;
-	uint16 requestCode;
+	UINT16 requestCode;
 };
 
 struct MSG_COM_REPLY
 {
 	WORD type;
-	uint16 replyCode;
+	UINT16 replyCode;
 };
 
 struct MSG_REQ_SET_PLAYER_NAME
@@ -181,7 +189,7 @@ struct MSG_SERVE_PLAYER_LIST
 	WORD type;
 	char playerName[PROTOCOL_CONSTANT::MAX_OF_PLAYER_NAME_LEN];
 	INT playerNameLen;
-	uint16 playerID;
+	UINT16 playerID;
 	BYTE playerType;
 	BYTE order;
 };
@@ -189,8 +197,8 @@ struct MSG_SERVE_PLAYER_LIST
 struct MSG_SERVE_READY_TO_START
 {
 	WORD type;
-	uint16 code;
-	uint16 playerID;
+	UINT16 code;
+	UINT16 playerID;
 };
 
 struct MSG_FWD_PLAYER_INFO
@@ -213,14 +221,14 @@ struct MSG_SERVE_ROOM_LIST
 	WORD type;
 	char roomName[PROTOCOL_CONSTANT::MAX_OF_ROOM_NAME_LEN];
 	INT roomNameLen;
-	uint16 roomID;
+	UINT16 roomID;
 	BYTE order;
 };
 
 struct MSG_REQ_JOIN_ROOM
 {
 	WORD type;
-	uint16 roomID;
+	UINT16 roomID;
 };
 
 struct MSG_REPLY_ENTER_TO_SELECT_FIELD
@@ -428,6 +436,14 @@ struct MSG_S_MONT_COLLIDER_MAP
 	WORD type;
 	INT numOfElements;
 	Position colliders[PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS];
+};
+
+struct MSG_S_MONT_JPS_OBSTACLE
+{
+	WORD type;
+	byte setting;
+	INT x;
+	INT y;
 };
 
 #pragma pack(pop)

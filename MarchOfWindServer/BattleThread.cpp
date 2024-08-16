@@ -619,46 +619,64 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 
 	battleThread->AllocTlsMemPool();
 
+	map<pair<int, int>, bool> JpsObsSet;
+
 	while (true) {
-		Sleep(1);
+		//Sleep(1);
 
 #if defined(JPS_DEBUG)
-		std::vector<std::vector<Position>> positions;
-		positions.push_back(std::vector<Position>());
+		if(g_Obstacles.GetSize() > 0) {
+			MSG_S_MONT_JPS_OBSTACLE msg;
+			g_Obstacles.Dequeue(msg);
 
-		while (g_Obstacles.GetSize() > 0) {
-			pair<int, int> p;
-			if (g_Obstacles.Dequeue(p, true)) {
-
-				if (positions.back().size() >= PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS) {
-					positions.push_back(std::vector<Position>());
-				}
-				positions.back().push_back({ p.first, p.second });
+			if (msg.setting == enJpsObstacleSetting::CLEAR) {
+				JpsObsSet.clear();
 			}
+			else if(msg.setting == enJpsObstacleSetting::SET) {
+				int x = msg.x / 10;
+				int y = msg.y / 10;
+				
+				msg.x = x;
+				msg.y = y;
 
-			if (positions.size() >= 1 && positions.back().size() > 0) {
-				for (int i = 0; i < positions.size(); i++) {
-					if (positions[i].size() == 0) {
+				auto iter = JpsObsSet.find({ x, y });
+				if (iter == JpsObsSet.end()) {
+					JpsObsSet.insert({ { x, y }, true });
+				}
+				else {
+					if (iter->second == false) {
+						iter->second = true;
+					}
+					else {
 						continue;
 					}
-
-					JBuffer* msg = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MONT_COLLIDER_MAP));
-					MSG_S_MONT_COLLIDER_MAP* body = msg->DirectReserve<MSG_S_MONT_COLLIDER_MAP>();
-					body->type = enPacketType::S_MONT_COLLIDER_MAP;
-					body->numOfElements = positions[i].size();
-					memcpy(body->colliders, positions[i].data(), sizeof(Position) * positions[i].size());
-
-					for (const auto player : battleThread->m_PlayerInfos) {
-						if (player.second.inBattle) {
-							battleThread->AddRefSerialBuff(msg);
-							if (!battleThread->SendPacket(player.second.sessionID, msg)) {
-								battleThread->FreeSerialBuff(msg);
-							}
-						}
-					}
-					battleThread->FreeSerialBuff(msg);
 				}
 			}
+			else {
+				int x = msg.x / 10;
+				int y = msg.y / 10;
+
+				msg.x = x;
+				msg.y = y;
+
+				auto iter = JpsObsSet.find({ x, y });
+				if (iter == JpsObsSet.end()) {
+					JpsObsSet.insert({ { x, y }, false });
+				}
+				else {
+					if (iter->second == true) {
+						iter->second = false;
+					}
+					else {
+						continue;
+					}
+				}
+			}
+
+			JBuffer* sendBuff = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MONT_JPS_OBSTACLE));
+			MSG_S_MONT_JPS_OBSTACLE* body = sendBuff->DirectReserve<MSG_S_MONT_JPS_OBSTACLE>();
+			memcpy(body, &msg, sizeof(MSG_S_MONT_JPS_OBSTACLE));
+			battleThread->BroadcastToGameManager(sendBuff);
 		}
 
 #elif

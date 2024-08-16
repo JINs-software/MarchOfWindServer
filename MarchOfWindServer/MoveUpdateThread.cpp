@@ -2,13 +2,12 @@
 #include "MoveUpdateThread.h"
 
 #include "JPSPathFinder.h"
-#include "Protocol.h"
 
 
 using namespace std;
 
 #if defined(JPS_DEBUG)
-LockFreeQueue<pair<int, int>> g_Obstacles;
+LockFreeQueue<MSG_S_MONT_JPS_OBSTACLE> g_Obstacles;
 #endif
 
 void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw, std::set<std::pair<int, int>>& colliders) {
@@ -105,6 +104,10 @@ bool MoveUpdateThread::MoveCollider(float x, float z, float radius, float nx, fl
 void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<float, float>& position, float radius, float tolerance, const pair<float, float>& dest, vector<pair<float, float>>& resultPath) {
 	cout << "TracePathFindingFunc Start!" << endl;
 
+#if defined(JPS_DEBUG)
+	g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::CLEAR, 0, 0});
+#endif
+
 	int iPosX = position.first * PRECISION;
 	int iPosZ = position.second * PRECISION;
 	int iDestX = dest.first * PRECISION;
@@ -113,7 +116,7 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	int iTolerance = tolerance * PRECISION;
 
 	Circle_2 StartCircle({ iPosX - iRadius, iPosZ }, { iPosX + iRadius, iPosZ });
-	Circle_2 DestCircle({ iDestX- iTolerance, iDestZ }, { iDestZ + iTolerance, iDestZ });
+	Circle_2 DestCircle({ iDestX- iTolerance, iDestZ }, { iDestX + iTolerance, iDestZ });
 
 	Circle_2 radiusCircle({ -iRadius, 0 }, { iRadius, 0 });
 	Circle_2 toleranceCircle({ -iTolerance, 0 }, { iTolerance, 0 });
@@ -174,18 +177,20 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 					int setX = p.first + x;
 					int setZ = p.second + z;
 
+					if (setX >= PRECISE_X || setZ >= PRECISE_Z) continue;
 					jpsPathFinder.SetObstacle(setZ, setX);
 #if defined(JPS_DEBUG)
-					obstacleSet.insert({ setX, setZ });
+					g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::SET, setX, setZ });
 #endif
 				}
 				for (const auto& p : radiusCircleBounded) {
 					int setX = p.first + x;
 					int setZ = p.second + z;
 
+					if (setX >= PRECISE_X || setZ >= PRECISE_Z) continue;
 					jpsPathFinder.SetObstacle(setZ, setX);
 #if defined(JPS_DEBUG)
-					obstacleSet.insert({ setX, setZ });
+					g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::SET, setX, setZ });
 #endif
 				}
 			}
@@ -200,34 +205,31 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	for (const auto& p : radiusCircleBounded) {
 		int delX = iPosX + p.first;
 		int delZ = iPosZ + p.second;
+		if (delX >= PRECISE_X || delX >= PRECISE_Z) continue;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
 #if defined(JPS_DEBUG)
-		obstacleSet.erase({ delX, delZ });
+		g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::UNSET, delX, delZ });
 #endif
 	}
 	
 	for (const auto& p : toleranceCircleBoundary) {
 		int delX = iDestX + p.first;
 		int delZ = iDestZ + p.second;
+		if (delX >= PRECISE_X || delX >= PRECISE_Z) continue;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
 #if defined(JPS_DEBUG)
-		obstacleSet.erase({ delX, delZ });
+		g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::UNSET, delX, delZ });
 #endif
 	}
 	for (const auto& p : toleranceCircleBounded) {
 		int delX = iDestX + p.first;
 		int delZ = iDestZ + p.second;
+		if (delX >= PRECISE_X || delX >= PRECISE_Z) continue;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
 #if defined(JPS_DEBUG)
-		obstacleSet.erase({ delX, delZ });
+		g_Obstacles.Enqueue({ enPacketType::S_MONT_JPS_OBSTACLE, enJpsObstacleSetting::UNSET, delX, delZ });
 #endif
 	}
-
-#if defined(JPS_DEBUG)
-	for (const auto& p : obstacleSet) {
-		g_Obstacles.Enqueue(p);
-	}
-#endif
 
 	vector<PathNode<int>> trackList;
 	auto iter = jpsPathFinder.FindPath(iPosZ, iPosX, iDestZ, iDestX, trackList);

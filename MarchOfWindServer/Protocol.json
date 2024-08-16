@@ -15,12 +15,27 @@
         "C#": "ushort"
       },
       {
+        "dataType": "uint16",
+        "C++": "UINT16"
+      },
+      {
         "dataType": "uint64",
         "C#": "UInt64"
       },
       {
         "dataType": "int",
         "C++": "INT"
+      }
+    ]
+  },
+
+  "Include File": {
+    "type": "include",
+    "references": [
+      {
+        "lang": "C++",
+        "header": "ProtocolExt.h",
+        "system": "false"
       }
     ]
   },
@@ -91,7 +106,9 @@
       "MGR_UNIT_DIE_REQUEST",
 
       "S_MONT_COLLIDER_MAP_RENEW",
-      "S_MONT_COLLIDER_MAP"
+      "S_MONT_COLLIDER_MAP",
+
+      "S_MONT_JPS_OBSTACLE"
     ]
   },
 
@@ -221,6 +238,16 @@
     "field": [
       "PATH",
       "END_OF_PATH"
+    ]
+  },
+
+  "[enum] JPS Obstacle Setting Type": {
+    "type": "enum",
+    "name": "enJpsObstacleSetting",
+    "field": [
+      "SET",
+      "UNSET",
+      "CLEAR"
     ]
   },
 
@@ -1023,6 +1050,25 @@
           "MAX_OF_COLLIDER_ELEMENTS"
         ],
         "name": "colliders"
+      }
+    ]
+  },
+
+  "S_MONT_JPS_OBSTACLE": {
+    "type": "message",
+    "name": "MSG_S_MONT_JPS_OBSTACLE",
+    "field": [
+      {
+        "type": "byte",
+        "name": "setting"
+      },
+      {
+        "type": "int",
+        "name": "x"
+      },
+      {
+        "type": "int",
+        "name": "y"
       }
     ]
   }
