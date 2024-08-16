@@ -334,7 +334,7 @@ void BattleThread::Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT
 		UnicastToGameManager(reply, unitInfo->team);
 
 		unitInfo->RequestTracePathFinding(msg.spathID, unitPosition.first, unitPosition.second, msg.destX, msg.destZ);
-		unitInfo->pathPending = true;
+		//unitInfo->pathPending = true;
 	}
 }
 
@@ -622,6 +622,47 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 	while (true) {
 		Sleep(1);
 
+#if defined(JPS_DEBUG)
+		std::vector<std::vector<Position>> positions;
+		positions.push_back(std::vector<Position>());
+
+		while (g_Obstacles.GetSize() > 0) {
+			pair<int, int> p;
+			if (g_Obstacles.Dequeue(p, true)) {
+
+				if (positions.back().size() >= PROTOCOL_CONSTANT::MAX_OF_COLLIDER_ELEMENTS) {
+					positions.push_back(std::vector<Position>());
+				}
+				positions.back().push_back({ p.first, p.second });
+			}
+
+			if (positions.size() >= 1 && positions.back().size() > 0) {
+				for (int i = 0; i < positions.size(); i++) {
+					if (positions[i].size() == 0) {
+						continue;
+					}
+
+					JBuffer* msg = battleThread->AllocSerialSendBuff(sizeof(MSG_S_MONT_COLLIDER_MAP));
+					MSG_S_MONT_COLLIDER_MAP* body = msg->DirectReserve<MSG_S_MONT_COLLIDER_MAP>();
+					body->type = enPacketType::S_MONT_COLLIDER_MAP;
+					body->numOfElements = positions[i].size();
+					memcpy(body->colliders, positions[i].data(), sizeof(Position) * positions[i].size());
+
+					for (const auto player : battleThread->m_PlayerInfos) {
+						if (player.second.inBattle) {
+							battleThread->AddRefSerialBuff(msg);
+							if (!battleThread->SendPacket(player.second.sessionID, msg)) {
+								battleThread->FreeSerialBuff(msg);
+							}
+						}
+					}
+					battleThread->FreeSerialBuff(msg);
+				}
+			}
+		}
+
+#elif
+
 		std::vector<std::vector<Position>> positions;
 		positions.push_back(std::vector<Position>());
 
@@ -676,6 +717,7 @@ UINT __stdcall BattleThread::SendUpdatedColliderInfoToMont(void* arg)
 			}
 			battleThread->FreeSerialBuff(msg);
 		}
+#endif
 	}
 }
 

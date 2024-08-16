@@ -29,8 +29,8 @@ struct UnitInfo {
 
 	bool moving;
 
-	bool hasPath;
-	bool pathPending;
+	//bool hasPath;
+	//bool pathPending;
 
 
 	SRWLOCK TransformSRWLock;
@@ -52,8 +52,8 @@ struct UnitInfo {
 
 	UnitInfo(MoveUpdateThread* updateThread) {
 		moving = false;
-		hasPath = false;
-		pathPending = false;
+		//hasPath = false;
+		//pathPending = false;
 		UpdateThread = updateThread;
 		InitializeSRWLock(&TransformSRWLock);
 	}
@@ -179,10 +179,10 @@ private:
 
 			UpdateThread->AllocTracePathFindingWork(params);
 
-			m_UnitInfo->pathPending = true;
+			//m_UnitInfo->pathPending = true;
 		}
 
-		if (m_UnitInfo->pathPending == false) {
+		//if (m_UnitInfo->pathPending == false) {
 
 
 			while (!m_UnitInfo->JobQueue.empty()) {
@@ -239,6 +239,6 @@ private:
 					}
 				}
 			}
-		}
+		//}
 	}
 };

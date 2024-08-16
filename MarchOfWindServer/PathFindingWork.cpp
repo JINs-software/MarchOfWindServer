@@ -23,9 +23,8 @@ UINT __stdcall  PathFindingWorkerPool::PathFindingWorkerFunc(void* arg)
 	HANDLE event = workerPool->m_ThredIdToEventHndMap[thrdID];
 
 	while (true) {
-		WaitForSingleObject(event, INFINITE);
-
 		if (!workerPool->GetWorkFromPool(pathFindingJob)) {
+			WaitForSingleObject(event, INFINITE);
 			continue;
 		}
 

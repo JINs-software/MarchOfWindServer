@@ -7,6 +7,9 @@
 
 using namespace std;
 
+#if defined(JPS_DEBUG)
+LockFreeQueue<pair<int, int>> g_Obstacles;
+#endif
 
 void MoveUpdateThread::ResetCollder(float x, float z, float radius, bool draw, std::set<std::pair<int, int>>& colliders) {
 	int preciseX = x * PRECISION;
@@ -155,6 +158,10 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 		jpsPathFinder.SetObstacle(1000, x);
 	}
 
+#if defined(JPS_DEBUG)
+	set<pair<int, int>> obstacleSet;
+#endif
+
 	for (int x = 1001; x < PRECISE_X; x++) {
 		for (int z = 1001; z < PRECISE_Z; z++) {
 			if (m_UnitColliderCountMap[z][x] > 0) {
@@ -168,63 +175,162 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 					int setZ = p.second + z;
 
 					jpsPathFinder.SetObstacle(setZ, setX);
+#if defined(JPS_DEBUG)
+					obstacleSet.insert({ setX, setZ });
+#endif
 				}
 				for (const auto& p : radiusCircleBounded) {
 					int setX = p.first + x;
 					int setZ = p.second + z;
 
 					jpsPathFinder.SetObstacle(setZ, setX);
+#if defined(JPS_DEBUG)
+					obstacleSet.insert({ setX, setZ });
+#endif
 				}
 			}
 		}
 	}
 
-	for (const auto& p : radiusCircleBoundary) {
-		int delX = iPosX + p.first;
-		int delZ = iPosZ + p.second;
-		jpsPathFinder.UnsetObstacle(delZ, delX);
-	}
+	//for (const auto& p : radiusCircleBoundary) {
+	//	int delX = iPosX + p.first;
+	//	int delZ = iPosZ + p.second;
+	//	jpsPathFinder.UnsetObstacle(delZ, delX);
+	//}
 	for (const auto& p : radiusCircleBounded) {
 		int delX = iPosX + p.first;
 		int delZ = iPosZ + p.second;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
+#if defined(JPS_DEBUG)
+		obstacleSet.erase({ delX, delZ });
+#endif
 	}
 	
 	for (const auto& p : toleranceCircleBoundary) {
 		int delX = iDestX + p.first;
 		int delZ = iDestZ + p.second;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
+#if defined(JPS_DEBUG)
+		obstacleSet.erase({ delX, delZ });
+#endif
 	}
 	for (const auto& p : toleranceCircleBounded) {
 		int delX = iDestX + p.first;
 		int delZ = iDestZ + p.second;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
+#if defined(JPS_DEBUG)
+		obstacleSet.erase({ delX, delZ });
+#endif
 	}
+
+#if defined(JPS_DEBUG)
+	for (const auto& p : obstacleSet) {
+		g_Obstacles.Enqueue(p);
+	}
+#endif
 
 	vector<PathNode<int>> trackList;
 	auto iter = jpsPathFinder.FindPath(iPosZ, iPosX, iDestZ, iDestX, trackList);
 	
 	// 첫번째 iterator는 시작점?
 	// 시작점은 보내지 않도록
+	
+	Pos<int> beforePoint;
 	if (!iter.End()) {
+		beforePoint = *iter;
 		++iter;
 	}
+
+	vector<Pos<int>> pathCandidate;
 
 	// 메시지 생성
 	while (!iter.End()) {
 		auto p = *iter;
 		++iter;
 
-		JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
-		MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
-		msg->type = enPacketType::S_MGR_TRACE_SPATH;
-		msg->unitID = unitID;
-		msg->spathID = spathID;
-		msg->posX = p.x / static_cast<float>(PRECISION);
-		msg->posZ = p.y / static_cast<float>(PRECISION);
-		msg->spathState = enSPathStateType::PATH;
+		if (GetDistance(beforePoint.x, beforePoint.y, p.x, p.y) > iRadius) {
+			//JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+			//MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+			//msg->type = enPacketType::S_MGR_TRACE_SPATH;
+			//msg->unitID = unitID;
+			//msg->spathID = spathID;
+			//msg->posX = p.x / static_cast<float>(PRECISION);
+			//msg->posZ = p.y / static_cast<float>(PRECISION);
+			//msg->spathState = enSPathStateType::PATH;
+			//
+			//PushSendReqMessage(unitID, sendReqMsg);
 
-		PushSendReqMessage(unitID, sendReqMsg);
+			pathCandidate.push_back(p);
+
+			beforePoint = p;
+		}
+	}
+
+	if (pathCandidate.size() > 2) {
+		Pos<int> preprePos;
+		preprePos.x = iPosX;
+		preprePos.y = iPosZ;
+	
+		Pos<int> p{ 0, 0 };
+		for (int i = 1; i < pathCandidate.size();) {
+			float angle = GetAngle(preprePos.x, preprePos.y, pathCandidate[i - 1].x, pathCandidate[i - 1].y, pathCandidate[i].x, pathCandidate[i].y);
+
+			if (angle < 5) {
+				p.x = pathCandidate[i].x;
+				p.y = pathCandidate[i].y;
+				i += 2;
+			}
+			else {
+				p.x = pathCandidate[i - 1].x;
+				p.y = pathCandidate[i - 1].y;
+				i += 1;
+			}
+
+			preprePos.x = p.x;
+			preprePos.y = p.y;
+
+			JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+			MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+			msg->type = enPacketType::S_MGR_TRACE_SPATH;
+			msg->unitID = unitID;
+			msg->spathID = spathID;
+			msg->posX = p.x / static_cast<float>(PRECISION);
+			msg->posZ = p.y / static_cast<float>(PRECISION);
+			msg->spathState = enSPathStateType::PATH;
+
+			PushSendReqMessage(unitID, sendReqMsg);
+
+			
+		}
+
+		// 마지막 노드가 없다면 이를 전송?
+		//if (p != pathCandidate.back()) {
+		//	JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+		//	MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+		//	msg->type = enPacketType::S_MGR_TRACE_SPATH;
+		//	msg->unitID = unitID;
+		//	msg->spathID = spathID;
+		//	msg->posX = p.x / static_cast<float>(PRECISION);
+		//	msg->posZ = p.y / static_cast<float>(PRECISION);
+		//	msg->spathState = enSPathStateType::PATH;
+		//
+		//	PushSendReqMessage(unitID, sendReqMsg);
+		//}
+
+	}
+	else {
+		for (const auto& p : pathCandidate) {
+			JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
+			MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
+			msg->type = enPacketType::S_MGR_TRACE_SPATH;
+			msg->unitID = unitID;
+			msg->spathID = spathID;
+			msg->posX = p.x / static_cast<float>(PRECISION);
+			msg->posZ = p.y / static_cast<float>(PRECISION);
+			msg->spathState = enSPathStateType::PATH;
+			
+			PushSendReqMessage(unitID, sendReqMsg);
+		}
 	}
 
 	JBuffer* eopReq = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));

@@ -15,9 +15,15 @@
 //typedef Kernel::Point_2 Point_2;
 //typedef CGAL::Circle_2<Kernel> Circle_2;
 
-
 using uint16 = unsigned short;
 using SessionID64 = unsigned long long;
+
+#define M_PI 3.14159
+
+#define JPS_DEBUG
+#if defined(JPS_DEBUG)
+extern LockFreeQueue<std::pair<int, int>> g_Obstacles;
+#endif
 
 class MoveUpdateThread : public UpdateThread
 {
@@ -75,5 +81,32 @@ public:
 
 private:
 	void TracePathFindingFunc(int unitID, int spathID, const std::pair<float, float>& position, float radius, float tolerance, const std::pair<float, float>& dest, std::vector<std::pair<float, float>>& resultPath);
+
+	inline int GetDistance(int x, int z, int tx, int tz) {
+		return sqrt(pow(x - tx, 2) + pow(z - tz, 2));
+	}
+	inline float GetAngle(int x0, int z0, int x1, int z1, int x2, int z2) {
+		// 벡터 p1 -> p2
+		int a_x = x1 - x0;
+		int a_y = z1 - z0;
+
+		// 벡터 p2 -> p3
+		int b_x = x2 - x1;
+		int b_y = z2 - z1;
+
+		// 내적 계산 (dot product)
+		int dotProduct = a_x * b_x + a_y * b_y;
+
+		// 벡터 크기 계산 (magnitude)
+		float magnitudeA = std::sqrt(a_x * a_x + a_y * a_y);
+		float magnitudeB = std::sqrt(b_x * b_x + b_y * b_y);
+
+		// 각도 계산 (라디안)
+		float angleRadians = std::acos(dotProduct / (magnitudeA * magnitudeB));
+
+		float angleDegrees = angleRadians * 180.0 / M_PI;
+
+		return angleDegrees;
+	}
 };
 
