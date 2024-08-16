@@ -76,6 +76,7 @@ private:
 
 	void UnicastToGameManager(JBuffer* msg, int team);
 	void BroadcastToGameManager(JBuffer* msg);
+	void BroadcastToGameManager(JBuffer* msg, int exceptionTeam);
 
 	void SendExistingUnits(SessionID64 sessionID);
 

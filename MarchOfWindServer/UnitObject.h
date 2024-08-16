@@ -81,7 +81,8 @@ struct UnitInfo {
 			spathID,
 			{posX, posZ},
 			radius,
-			attackDist,
+			//attackDist,
+			5,					// temp
 			{destX, destZ}
 		};
 		PathFindingQueue.push(params);

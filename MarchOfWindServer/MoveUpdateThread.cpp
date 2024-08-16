@@ -109,6 +109,9 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	int iRadius = radius * PRECISION;
 	int iTolerance = tolerance * PRECISION;
 
+	Circle_2 StartCircle({ iPosX - iRadius, iPosZ }, { iPosX + iRadius, iPosZ });
+	Circle_2 DestCircle({ iDestX- iTolerance, iDestZ }, { iDestZ + iTolerance, iDestZ });
+
 	Circle_2 radiusCircle({ -iRadius, 0 }, { iRadius, 0 });
 	Circle_2 toleranceCircle({ -iTolerance, 0 }, { iTolerance, 0 });
 	vector<pair<int, int>> radiusCircleBoundary;
@@ -155,7 +158,18 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	for (int x = 1001; x < PRECISE_X; x++) {
 		for (int z = 1001; z < PRECISE_Z; z++) {
 			if (m_UnitColliderCountMap[z][x] > 0) {
+				Point_2 point{ x, z };
+				if (StartCircle.has_on_boundary(point) || StartCircle.has_on_bounded_side(point) || DestCircle.has_on_boundary(point) || DestCircle.has_on_bounded_side(point)) {
+					continue;
+				}
+
 				for (const auto& p : radiusCircleBoundary) {
+					int setX = p.first + x;
+					int setZ = p.second + z;
+
+					jpsPathFinder.SetObstacle(setZ, setX);
+				}
+				for (const auto& p : radiusCircleBounded) {
 					int setX = p.first + x;
 					int setZ = p.second + z;
 
@@ -175,7 +189,7 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 		int delZ = iPosZ + p.second;
 		jpsPathFinder.UnsetObstacle(delZ, delX);
 	}
-
+	
 	for (const auto& p : toleranceCircleBoundary) {
 		int delX = iDestX + p.first;
 		int delZ = iDestZ + p.second;
