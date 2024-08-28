@@ -71,8 +71,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ExternalIncludePath>$(SolutionDir)..\..\0. Utility\RingBuffer\include;$(SolutionDir)..\..\0. Utility\MemoryPool\include;$(SolutionDir)..\..\0. Utility\JNetLibrary\include;$(SolutionDir)..\..\0. Utility\LockFree\include;$(SolutionDir)..\..\0. Utility\PerformanceCounter\include;$(SolutionDir)..\..\0. Utility\Boost;$(SolutionDir)..\..\0. Utility\CGAL-5.6.1\include;$(SolutionDir)..\..\0. Utility\PathFinderLibrary\include;$(ExternalIncludePath)</ExternalIncludePath>
-    <LibraryPath>$(SolutionDir)..\..\0. Utility\Boost\libs;$(LibraryPath)</LibraryPath>
+    <ExternalIncludePath>$(SolutionDir)\Library\RingBufferLibrary\include;$(SolutionDir)\Library\MemoryPool\include;$(SolutionDir)\Library\JNetLibrary\include;$(SolutionDir)\Library\LockFree\include;$(SolutionDir)\Library\PathFinderLibrary\include;$(SolutionDir)\Library\Boost;$(SolutionDir)\Library\CGAL-5.6.1;$(ExternalIncludePath)</ExternalIncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -130,7 +131,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)..\..\0. Utility\RingBuffer\lib\$(Configuration)\RingBuffer.lib;$(SolutionDir)..\..\0. Utility\JNetLibrary\lib\$(Configuration)\JNetLibrary.lib;$(SolutionDir)..\..\0. Utility\LockFree\lib\$(Configuration)\LockFreeMemoryPool.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)\Library\RingBufferLibrary\lib\$(Configuration)\RingBuffer.lib;$(SolutionDir)\Library\JNetLibrary\lib\$(Configuration)\JNetLibrary.lib;$(SolutionDir)\Library\LockFree\lib\$(Configuration)\LockFreeMemoryPool.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -139,12 +140,14 @@
     <ClInclude Include="GameStaticData.h" />
     <ClInclude Include="GatewayThread.h" />
     <ClInclude Include="Group.h" />
-    <ClInclude Include="LobbyThread.h" />
+    <ClInclude Include="HubThread.h" />
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="MoveUpdateThread.h" />
     <ClInclude Include="MOWServer.h" />
     <ClInclude Include="PathFindingWork.h" />
     <ClInclude Include="Protocol.h" />
+    <ClInclude Include="Protocol_backup.h" />
+    <ClInclude Include="Protocol_old.h" />
     <ClInclude Include="ProtocolExt.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="UnitObject.h" />
@@ -157,7 +160,7 @@
     <ClCompile Include="GatewayThread.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="LobbyThread.cpp">
+    <ClCompile Include="HubThread.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -179,7 +182,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Protocol.json" />
+    <None Include="Protocol_old.json" />
+    <None Include="Protocol_new.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -7,8 +7,8 @@
 #include <mutex>
 #include <utility>
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Circle_2.h>
+#include "CGAL/Simple_cartesian.h"
+#include "CGAL/Circle_2.h"
 
 #include <Windows.h>
 

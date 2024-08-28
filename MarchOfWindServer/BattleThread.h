@@ -1,6 +1,7 @@
 #pragma once
 #include <JNetCore.h>	
-#include "Protocol.h"
+//#include "Protocol.h"
+#include "Protocol_old.h"
 #include "UnitObject.h"	
 
 using namespace jnet;

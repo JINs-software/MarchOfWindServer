@@ -1,7 +1,9 @@
 #include "GatewayThread.h"
 #include "Group.h"
-#include "LobbyThread.h"
+#include "HubThread.h"
 #include "BattleThread.h"
+
+#include "Protocol.h"
 
 void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 {
@@ -10,28 +12,28 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		recvData.Peek(&type);
 
 		switch (type) {
-		case enPacketType::REQ_SET_PLAYER_NAME:
+		case MOW_HUB::C2S_CONNECTION:
 		{
 			ForwardSessionToGroup(sessionID, LOBBY_GROUP);
+
 			JBuffer* connMsg = AllocSerialBuff();
-			MSG_REQ_SET_PLAYER_NAME* body = connMsg->DirectReserve<MSG_REQ_SET_PLAYER_NAME>();
-			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MSG_REQ_SET_PLAYER_NAME));
+			MOW_HUB::MSG_C2S_CONNECTION* body = connMsg->DirectReserve<MOW_HUB::MSG_C2S_CONNECTION>();
+			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MOW_HUB::MSG_C2S_CONNECTION));
 			SendMessageGroupToGroup(sessionID, connMsg);
 		}
 		break;
-		case enPacketType::UNIT_S_CONN_BATTLE_FIELD:
+		case MOW_BATTLE_FIELD::C2S_ENTER_TO_BATTLE_FIELD:
 		{
-			MSG_UNIT_S_CONN_BATTLE_FIELD msg;
+			MOW_BATTLE_FIELD::MSG_C2S_UNIT_CONN_TO_BATTLE_FIELD msg;
 			recvData >> msg;
-			ForwardSessionToGroup(sessionID, msg.fieldID);
+			ForwardSessionToGroup(sessionID, msg.BATTLE_FIELD_ID);
 		}
 		break;
-		case enPacketType::UNIT_S_CREATE_UNIT:
+		case MOW_BATTLE_FIELD::C2S_UNIT_S_CREATE:
 		{
-			// 임시, 테스트 유닛이 곧바로 생성 메시지 전송
 			JBuffer* fwdCrtMsg = AllocSerialBuff();
-			recvData.Dequeue(fwdCrtMsg->GetEnqueueBufferPtr(), sizeof(MSG_UNIT_S_CREATE_UNIT));
-			fwdCrtMsg->DirectMoveEnqueueOffset(sizeof(MSG_UNIT_S_CREATE_UNIT));
+			MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE* body = fwdCrtMsg->DirectReserve< MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE>();
+			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE));
 			SendMessageGroupToGroup(sessionID, fwdCrtMsg);
 		}
 		break;

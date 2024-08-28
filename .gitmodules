@@ -1,0 +1,21 @@
+[submodule "Library/RingBufferLibrary"]
+	path = Library/RingBufferLibrary
+	url = https://github.com/JINs-software/RingBufferLibrary.git
+[submodule "Library/MemoryPool"]
+	path = Library/MemoryPool
+	url = https://github.com/JINs-software/MemoryPool.git
+[submodule "Library/JNetLibrary"]
+	path = Library/JNetLibrary
+	url = https://github.com/JINs-software/JNetLibrary.git
+[submodule "Library/LockFree"]
+	path = Library/LockFree
+	url = https://github.com/JINs-software/LockFree.git
+[submodule "Library/PathFinderLibrary"]
+	path = Library/PathFinderLibrary
+	url = https://github.com/JINs-software/PathFinderLibrary.git
+[submodule "Library/Boost"]
+	path = Library/Boost
+	url = https://github.com/JINs-software/Boost.git
+[submodule "Library/CGAL-5.6.1"]
+	path = Library/CGAL-5.6.1
+	url = https://github.com/JINs-software/CGAL-5.6.1.git

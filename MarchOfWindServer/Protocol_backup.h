@@ -2,54 +2,45 @@
 #pragma once
 #include <minwindef.h>
 
-
-enum class enCONNECTION_REPLY_CODE
-{
+enum class enCONNECTION_REPLY_CODE {
     SUCCESS,
     PLAYER_CAPACITY_EXCEEDED,
     INVALID_MSG_FIELD_VALUE,
     PLAYER_NAME_ALREADY_EXIXTS,
 };
 
-enum class enCREATE_MATCH_ROOM_REPLY_CODE
-{
+enum class enCREATE_MATCH_ROOM_REPLY_CODE {
     SUCCESS,
     MATCH_ROOM_CAPACITY_EXCEEDED,
     INVALID_MSG_FIELD_VALUE,
     MATCH_ROOM_NAME_ALREADY_EXIXTS,
 };
 
-enum class enJOIN_TO_MATCH_ROOM_REPLY_CODE
-{
+enum class enJOIN_TO_MATCH_ROOM_REPLY_CODE {
     SUCCESS,
     INVALID_MATCH_ROOM_ID,
     PLAYER_CAPACITY_IN_ROOM_EXCEEDED,
 };
 
-enum class enMATCH_START_REPLY_CODE
-{
+enum class enMATCH_START_REPLY_CODE {
     SUCCESS,
     NOT_FOUND_IN_MATCH_ROOM,
     NO_HOST_PRIVILEGES,
     UNREADY_PLAYER_PRESENT,
 };
 
-namespace MOW_SERVER
-{
+namespace MOW_SERVER {
     static const WORD S2S_REGIST_PLAYER_TO_MATCH_ROOM = 0;
 
 #pragma pack(push, 1)
-
-    struct MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM
+    struct MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM 
     {
         WORD type;
         CHAR PLAYER_NAME[30];
         BYTE LENGTH;
         UINT16 PLAYER_ID;
     };
-
-#pragma pack(pop)
-};
+}
 
 namespace MOW_HUB
 {

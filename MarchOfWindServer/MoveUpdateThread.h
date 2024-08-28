@@ -10,7 +10,7 @@
 //#include <CGAL/Circle_2.h>
 
 #include "PathFindingWork.h"
-#include "Protocol.h"
+#include "Protocol_old.h"
 
 //typedef CGAL::Simple_cartesian<int> Kernel;	
 //typedef Kernel::Point_2 Point_2;

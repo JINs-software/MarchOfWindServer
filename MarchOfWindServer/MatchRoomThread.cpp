@@ -4,38 +4,156 @@
 
 void MatchRoomThread::OnEnterClient(SessionID64 sessionID)
 {
-	for (const auto& p : m_PlayerInfoList) {
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+	for (const auto& p : m_PlayerList) {
 		if (p.first == sessionID) {
-			// 중복 세션 존재
-			DebugBreak();
 			return;
 		}
 	}
-
-	m_PlayerInfoList.push_back({ sessionID, {} });
+	m_PlayerList.push_back({ sessionID, {} });
 }
 
 void MatchRoomThread::OnLeaveClient(SessionID64 sessionID)
 {
-	for (auto iter = m_PlayerInfoList.begin(); iter != m_PlayerInfoList.end(); iter++) {
-		if (iter->first == sessionID) {
-			if (iter == m_PlayerInfoList.begin()) {
-				iter = m_PlayerInfoList.erase(iter);
+	DeletePlayerInMatchRoom(sessionID);
+}
 
-				// 방장 변경
-				iter->second.playerType = enPlayerTypeInMatchRoom::Manager;
+void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
+{
+	while (recvData.GetUseSize() >= sizeof(WORD)) {
+		WORD type;
+		recvData.Peek(&type);
+
+		switch (type) {
+		case MOW_SERVER::S2S_REGIST_PLAYER_TO_MATCH_ROOM:
+		{
+			MOW_SERVER::MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM msg;
+			recvData >> msg;
+			Proc_MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM(sessionID, msg);
+		}
+		break;
+		case MOW_HUB::C2S_QUIT_FROM_MATCH_ROOM:
+		{
+			MOW_HUB::MSG_C2S_QUIT_FROM_MATCH_ROOM msg;
+			recvData >> msg;
+			Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(sessionID, msg);
+		}
+		break;
+		case MOW_HUB::C2S_MATCH_START:
+		{
+			MOW_HUB::MSG_C2S_MATCH_START msg;
+			recvData >> msg;
+			Proc_MSG_C2S_MATCH_START(sessionID, msg);
+		}
+		break;
+		case MOW_HUB::C2S_MATCH_READY:
+		{
+			MOW_HUB::MSG_C2S_MATCH_READY msg;
+			recvData >> msg;
+			Proc_MSG_C2S_MATCH_READY(sessionID, msg);
+		}
+		break;
+		}
+	}
+}
+
+void MatchRoomThread::Proc_MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM(SessionID64 sessionID, MOW_SERVER::MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM msg)
+{
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+	for (auto& p : m_PlayerList) {
+		if (p.first == sessionID) {
+			//p.second = make_pair(msg.PLAYER_ID, string(msg.PLAYER_NAME, msg.LENGTH));
+			p.second = PlayerInfo{ msg.PLAYER_ID, string(msg.PLAYER_NAME, msg.LENGTH) };
+			break;
+		}
+	}
+}
+
+void MatchRoomThread::Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::MSG_C2S_QUIT_FROM_MATCH_ROOM msg)
+{
+	DeletePlayerInMatchRoom(sessionID);
+}
+
+void MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_START msg)
+{
+	JBuffer* reply = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_START_REPLY));
+	MOW_HUB::MSG_S2C_MATCH_START_REPLY* body = reply->DirectReserve< MOW_HUB::MSG_S2C_MATCH_START_REPLY>();
+	body->type = MOW_HUB::S2C_MATCH_START_REPLY;
+	if (!CheckPlayerInMatchRoom(sessionID)) {
+		// 방에 존재하는 플레이어 아님. (to do: 예외 처리)
+		body->REPLY_CODE = (BYTE)enMATCH_START_REPLY_CODE::NOT_FOUND_IN_MATCH_ROOM;
+		if (!SendPacket(sessionID, reply)) {
+			FreeSerialBuff(reply);
+		}
+		DebugBreak();
+		return;
+	}
+
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+
+	if (m_PlayerList.front().first != sessionID) {
+		// 방장 권한 없음
+		body->REPLY_CODE = (BYTE)enMATCH_START_REPLY_CODE::NO_HOST_PRIVILEGES;
+		if (!SendPacket(sessionID, reply)) {
+			FreeSerialBuff(reply);
+		}
+		return;
+	}
+
+	for (const auto& iter : m_PlayerList) {
+		if (iter.first != sessionID) {
+			if (!iter.second.ready) {
+				// 준비되지 않은 플레이어 존재
+				body->REPLY_CODE = (BYTE)enMATCH_START_REPLY_CODE::UNREADY_PLAYER_PRESENT;
+				if (!SendPacket(sessionID, reply)) {
+					FreeSerialBuff(reply);
+				}
+				return;
 			}
-			else {
-				iter = m_PlayerInfoList.erase(iter);
-			}
-			return;
 		}
 	}
 
-	// 세션 존재 X
-	DebugBreak();
+	// 게임 시작!!
 }
 
+void MatchRoomThread::Proc_MSG_C2S_MATCH_READY(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_READY msg)
+{
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+	for (auto& iter : m_PlayerList) {
+		if (iter.first == sessionID) {
+			iter.second.ready = true;
+			break;
+		}
+	}
+}
+
+bool MatchRoomThread::CheckPlayerInMatchRoom(SessionID64 sessionID)
+{
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+	for (auto iter = m_PlayerList.begin(); iter != m_PlayerList.end(); iter++) {
+		if (iter->first == sessionID) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void MatchRoomThread::DeletePlayerInMatchRoom(SessionID64 sessionID)
+{
+	std::lock_guard<std::mutex> lockGuard(m_MatchRoomMtx);
+	for (auto iter = m_PlayerList.begin(); iter != m_PlayerList.end(); iter++) {
+		if (iter->first == sessionID) {
+			m_PlayerList.erase(iter);
+			break;
+		}
+	}
+
+	// 매치룸 종료 판단 (플레이어 숫자 == 0 )
+
+	// 또는 플레이어 리스트 갱신 메시지 전송
+}
+
+/*
 void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 {
 	while (recvData.GetUseSize() >= sizeof(WORD)) {
@@ -210,3 +328,4 @@ void MatchRoomThread::BroadcastReadyToStart()
 		}
 	}
 }
+*/

@@ -4,7 +4,7 @@
 
 #include "Group.h"
 #include "GatewayThread.h"
-#include "LobbyThread.h"
+#include "HubThread.h"
 
 using namespace jnet;
 using namespace jgroup;
@@ -43,7 +43,7 @@ public:
 		}
 
 		CreateGroup(GATEWAY_GROUP, new GatewayThread());
-		CreateGroup(LOBBY_GROUP, new LobbyThread());
+		CreateGroup(LOBBY_GROUP, new HubThread());
 	}
 
 private:

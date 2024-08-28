@@ -1,0 +1,529 @@
+{
+    "SERVER_COMPILE_MODE": "HEADER_ONLY",
+    "SERVER_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWindServer\\MarchOfWindServer",
+    "CLIENT_COMPILE_MODE": "RPC",
+    "CLIENT_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWind_Unity_Client\\Assets\\Script\\RPC",
+  "JPD_Enums": [
+    {
+      "Name": "enCONNECTION_REPLY_CODE",
+      "Fields": [
+        "SUCCESS",
+        "PLAYER_CAPACITY_EXCEEDED",
+        "INVALID_MSG_FIELD_VALUE",
+        "PLAYER_NAME_ALREADY_EXIXTS"
+      ]
+    },
+    {
+      "Name": "enCREATE_MATCH_ROOM_REPLY_CODE",
+      "Fields": [
+        "SUCCESS",
+        "MATCH_ROOM_CAPACITY_EXCEEDED",
+        "INVALID_MSG_FIELD_VALUE",
+        "MATCH_ROOM_NAME_ALREADY_EXIXTS"
+      ]
+    },
+    {
+      "Name": "enJOIN_TO_MATCH_ROOM_REPLY_CODE",
+      "Fields": [
+        "SUCCESS",
+        "INVALID_MATCH_ROOM_ID",
+        "PLAYER_CAPACITY_IN_ROOM_EXCEEDED"
+      ]
+    },
+    {
+      "Name": "enMATCH_START_REPLY_CODE",
+      "Fields": [
+        "SUCCESS",
+        "NOT_FOUND_IN_MATCH_ROOM",
+        "NO_HOST_PRIVILEGES",
+        "UNREADY_PLAYER_PRESENT"
+      ]
+    }
+  ],
+  "JPD_ConstGroups": [],
+  "JPD_Namespaces": [
+    {
+      "Namespace": "MOW_SERVER",
+      "ID": "0",
+      "Defines": [
+        {
+          "Message": "REGIST_PLAYER_TO_MATCH_ROOM",
+          "ID": "",
+          "Dir": "S2S",
+          "Param": [
+            {
+              "Type": "CHAR",
+              "Name": "PLAYER_NAME",
+              "FixedLenOfArray": "30"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "LENGTH",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "PLAYER_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Namespace": "MOW_HUB",
+      "ID": "1000",
+      "Defines": [
+        {
+          "Message": "CONNECTION",
+          "ID": "1000",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "CHAR",
+              "Name": "PLAYER_NAME",
+              "FixedLenOfArray": "30"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "LENGTH",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "CONNECTION_REPLY",
+          "ID": "1001",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "PLAYER_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "CREATE_MATCH_ROOM",
+          "ID": "1002",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "CHAR",
+              "Name": "MATCH_ROOM_NAME",
+              "FixedLenOfArray": "50"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "LENGTH",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "NUM_OF_PARTICIPANTS",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "CREATE_MATCH_ROOM_REPLY",
+          "ID": "1003",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "MATCH_ROOM_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "ENTER_TO_ROBBY",
+          "ID": "1004",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "QUIT_FROM_ROBBY",
+          "ID": "1005",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "MATCH_ROOM_LIST",
+          "ID": "1006",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "UINT16",
+              "Name": "MATCH_ROOM_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "CHAR",
+              "Name": "MATCH_ROOM_NAME",
+              "FixedLenOfArray": "50"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "LENGTH",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "MATCH_ROOM_INDEX",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "TOTAL_MATCH_ROOM",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "JOIN_TO_MATCH_ROOM",
+          "ID": "1008",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "UINT16",
+              "Name": "MATCH_ROOM_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "JOIN_TO_MATCH_ROOM_REPLY",
+          "ID": "1009",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "QUIT_FROM_MATCH_ROOM",
+          "ID": "1010",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "MATCH_PLAYER_LIST",
+          "ID": "1011",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "UINT16",
+              "Name": "PLAYER_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "CHAR",
+              "Name": "MATCH_PLAYER_NAME",
+              "FixedLenOfArray": "30"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "LENGTH",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "MATCH_PLAYER_INDEX",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TOTAL_MATCH_PLAYER",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "MATCH_START",
+          "ID": "1012",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "MATCH_READY",
+          "ID": "1013",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "MATCH_START_REPLY",
+          "ID": "1014",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "CHANGE_MATCH_HOST",
+          "ID": "1015",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "UINT16",
+              "Name": "HOST_PLAYER_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Namespace": "MOW_PRE_BATTLE_FIELD",
+      "ID": "2000",
+      "Defines": [
+        {
+          "Message": "READY_TO_BATTLE",
+          "ID": "2000",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "READY_TO_BATTLE_REPLY",
+          "ID": "2001",
+          "Dir": "S2S",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "BATTLE_FIELD_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM_CODE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "ENTER_TO_SELECT_FIELD",
+          "ID": "2002",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "ENTER_TO_SELECT_FIELD_REPLY",
+          "ID": "2003",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "SELECTOR_COUNT",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "SELECTOR_OPTION",
+          "ID": "2004",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "OPTION_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "OPTION_VALUE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "SELECTOR_OPTION_REPLY",
+          "ID": "2005",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "REPLY_VALUE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Namespace": "MOW_BATTLE_FIELD",
+      "ID": "3000",
+      "Defines": [
+        {
+          "Message": "ENTER_TO_BATTLE_FIELD",
+          "ID": "3000",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "UNIT_CONN_TO_BATTLE_FIELD",
+          "ID": "3001",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "UINT16",
+              "Name": "BATTLE_FIELD_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_CREATE",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "CRT_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "UNIT_TYPE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_CREATE",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "CRT_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "UNIT_TYPE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM_CODE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "UINT16",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "SPEED",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "HP",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "RADIUS",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "ATTACK_DISTANCE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "ATTACK_RATE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "ATTACK_DELAY",
+              "FixedLenOfArray": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+} 

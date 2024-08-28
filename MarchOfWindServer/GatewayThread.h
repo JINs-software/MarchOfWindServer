@@ -1,6 +1,5 @@
 #pragma once
 #include "JNetCore.h"
-#include "Protocol.h"
 
 using namespace jnet;
 using namespace jgroup;
