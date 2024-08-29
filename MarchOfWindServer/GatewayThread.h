@@ -12,5 +12,6 @@ private:
 	virtual void OnEnterClient(SessionID64 sessionID) override {}
 	virtual void OnLeaveClient(SessionID64 sessionID) override {}
 	virtual void OnMessage(SessionID64 sessionID, JBuffer& recvData) override;
+	virtual void OnGroupMessage(GroupID groupID, JBuffer& msg) override {}
 };
 

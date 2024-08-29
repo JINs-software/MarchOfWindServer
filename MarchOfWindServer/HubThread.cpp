@@ -65,28 +65,6 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(sessionID, msg);
 		}
 		break;
-		//case MOW_HUB::C2S_QUIT_FROM_MATCH_ROOM:
-		//{
-		//	MOW_HUB::MSG_C2S_QUIT_FROM_MATCH_ROOM msg;
-		//	recvData >> msg;
-		//	Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(sessionID, msg);
-		//}
-		//break;
-		//case MOW_HUB::C2S_MATCH_START:
-		//{
-		//	MOW_HUB::MSG_C2S_MATCH_START msg;
-		//	recvData >> msg;
-		//	Proc_MSG_C2S_MATCH_START(sessionID, msg);
-		//}
-		//break;
-		//case MOW_HUB::C2S_MATCH_READY:
-		//{
-		//	MOW_HUB::MSG_C2S_MATCH_READY msg;
-		//	recvData >> msg;
-		//	Proc_MSG_C2S_MATCH_READY(sessionID, msg);
-		//}
-		//break;
-		// => MatchRoom 스레드에서 처리
 		default:
 		{
 			DebugBreak();
@@ -95,6 +73,44 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		}
 	}
 }
+void HubThread::OnGroupMessage(GroupID groupID, JBuffer& groupMessage)
+{
+	while (groupMessage.GetUseSize() >= sizeof(WORD)) {
+		WORD type;
+		groupMessage.Peek(&type);
+
+		switch (type) {
+		case MOW_SERVER::S2S_PLAYER_QUIT_FROM_MATCH_ROOM:
+		{
+			MOW_SERVER::MSG_S2S_PLAYER_QUIT_FROM_MATCH_ROOM msg;
+			groupMessage >> msg;
+			Proc_MSG_S2S_PLAYER_QUIT_FROM_MATCH_ROOM(groupID, msg);
+		}
+		break;
+		case MOW_SERVER::S2S_MATCH_ROOM_CLOSE:
+		{
+			MOW_SERVER::MSG_S2S_MATCH_ROOM_CLOSE msg;
+			groupMessage >> msg;
+			Proc_MSG_S2S_MATCH_ROOM_CLOSE(groupID, msg);
+		}
+		break;
+		case MOW_SERVER::S2S_GAME_START_FROM_MATCH_ROOM:
+		{
+			MOW_SERVER::MSG_S2S_GAME_START_FROM_MATCH_ROOM msg;
+			groupMessage >> msg;
+			Proc_MSG_S2S_GAME_START_FROM_MATCH_ROOM(groupID, msg);
+		}
+		break;
+		default:
+		{
+			DebugBreak();
+		}
+		break;
+		}
+	}
+}
+
+
 void HubThread::Proc_MSG_C2S_CONNECTION(SessionID64 sessionID, MOW_HUB::MSG_C2S_CONNECTION& msg) {
 	JBuffer* reply = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_CONNECTION_REPLY));
 	MOW_HUB::MSG_S2C_CONNECTION_REPLY* body = reply->DirectReserve<MOW_HUB::MSG_S2C_CONNECTION_REPLY>();
@@ -181,9 +197,6 @@ void HubThread::Proc_MSG_C2S_CREATE_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::M
 	RoomID matchRoomID = m_AllocRoomIdQueue.front();
 	m_AllocRoomIdQueue.pop();
 
-	m_RoomNameIdMap.insert({ matchRoomName, matchRoomID });
-	m_RoomIdNameMap.insert({ matchRoomID, matchRoomName });
-
 	body->REPLY_CODE = (BYTE)enCREATE_MATCH_ROOM_REPLY_CODE::SUCCESS;
 	body->MATCH_ROOM_ID = matchRoomID;
 	if (!SendPacket(sessionID, reply)) {
@@ -191,8 +204,18 @@ void HubThread::Proc_MSG_C2S_CREATE_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::M
 		return;
 	}
 
-	MatchRoomThread* matchRoomThrd = new MatchRoomThread();
-	m_MatchRoomThrdMap.insert({ matchRoomID, matchRoomThrd });
+	MatchRoomThread* matchRoomThrd = new MatchRoomThread(matchRoomID, msg.NUM_OF_PARTICIPANTS);
+
+	m_RoomNameIdMap.insert({ matchRoomName, matchRoomID });
+	m_MatchRoomIdInfoMap.insert({ matchRoomID, MatchRoomInfo()});
+	m_MatchRoomIdInfoMap[matchRoomID].roomID = matchRoomID;
+	m_MatchRoomIdInfoMap[matchRoomID].roomName = matchRoomName;
+	m_MatchRoomIdInfoMap[matchRoomID].capacity = msg.NUM_OF_PARTICIPANTS;
+	m_MatchRoomIdInfoMap[matchRoomID].players.insert(sessionID);
+	m_MatchRoomIdInfoMap[matchRoomID].matchRoomThread = matchRoomThrd;
+	m_MatchRoomList.push_back(matchRoomID);
+
+	// 그룹 ID는 매치룸 ID와 동일하게 지정
 	CreateGroup(matchRoomID, matchRoomThrd);
 	ForwardSessionToGroup(sessionID, matchRoomID);
 
@@ -201,14 +224,30 @@ void HubThread::Proc_MSG_C2S_CREATE_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::M
 	PlayerID playerID = m_SessionPlayerIdMap[sessionID];
 	string playerName = m_PlayerIDNameMap[playerID];
 	registBody->type = MOW_SERVER::S2S_REGIST_PLAYER_TO_MATCH_ROOM;
+	registBody->SESSION_ID = sessionID;
 	memcpy(registBody->PLAYER_NAME, playerName.data(), playerName.length());
 	registBody->LENGTH = playerName.length();
 	registBody->PLAYER_ID = playerID;
-	SendMessageGroupToGroup(sessionID, registMsg);
 
+	SendGroupMessage(matchRoomID, registMsg);
+
+	// 새로운 방 생성 정보를 로비 대기 유저에 브로드 캐스팅
+	JBuffer* roomMsg = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_ROOM_LIST));
+	MOW_HUB::MSG_S2C_MATCH_ROOM_LIST* roomBody = roomMsg->DirectReserve<MOW_HUB::MSG_S2C_MATCH_ROOM_LIST>();
+	roomBody->type = MOW_HUB::S2C_MATCH_ROOM_LIST;
+	roomBody->MATCH_ROOM_ID = matchRoomID;
+	memcpy(roomBody->MATCH_ROOM_NAME, matchRoomName.data(), matchRoomName.length());
+	roomBody->LENGTH = matchRoomName.length();
+	roomBody->MATCH_ROOM_INDEX = m_MatchRoomList.size() - 1;
+	roomBody->TOTAL_MATCH_ROOM = m_MatchRoomList.size();
+
+	BroadcastMessageToLobby(roomMsg);
 }
 void HubThread::Proc_MSG_C2S_ENTER_TO_ROBBY(SessionID64 sessionID, MOW_HUB::MSG_C2S_ENTER_TO_ROBBY& msg) {
 	m_PlayerSessionInLobby.insert(sessionID);
+
+	// 기존 생성 매치룸 정보 전달
+	SendMatchRoomList(sessionID);
 }
 void HubThread::Proc_MSG_C2S_QUIT_FROM_ROBBY(SessionID64 sessionID, MOW_HUB::MSG_C2S_QUIT_FROM_ROBBY& msg) {
 	m_PlayerSessionInLobby.erase(sessionID);
@@ -218,8 +257,8 @@ void HubThread::Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::
 	MOW_HUB::MSG_S2C_JOIN_TO_MATCH_ROOM_REPLY* body = reply->DirectReserve<MOW_HUB::MSG_S2C_JOIN_TO_MATCH_ROOM_REPLY>();
 	body->type = MOW_HUB::S2C_JOIN_TO_MATCH_ROOM_REPLY;
 	
-	auto iter = m_MatchRoomThrdMap.find(msg.MATCH_ROOM_ID);
-	if (iter == m_MatchRoomThrdMap.end()) {
+	auto iter = m_MatchRoomIdInfoMap.find(msg.MATCH_ROOM_ID);
+	if (iter == m_MatchRoomIdInfoMap.end()) {
 		// 매치룸 ID에 해당하는 매치룸이 존재하지 않음
 		body->REPLY_CODE = (BYTE)enJOIN_TO_MATCH_ROOM_REPLY_CODE::INVALID_MATCH_ROOM_ID;
 		if (!SendPacket(sessionID, reply)) {
@@ -228,17 +267,18 @@ void HubThread::Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::
 		return;
 	}
 
-	MatchRoomThread* matchRoomThrd = iter->second;
-	if (matchRoomThrd != nullptr) {
-		if (!matchRoomThrd->AbleToEnter()) {
-			// 수용 인원 초과
-			body->REPLY_CODE = (BYTE)enJOIN_TO_MATCH_ROOM_REPLY_CODE::PLAYER_CAPACITY_IN_ROOM_EXCEEDED;
-			if (!SendPacket(sessionID, reply)) {
-				FreeSerialBuff(reply);
-			}
-			return;
+	MatchRoomInfo& matchRoomInfo = iter->second;
+	if (matchRoomInfo.players.size() >= matchRoomInfo.capacity) {
+		// 수용 인원 초과
+		body->REPLY_CODE = (BYTE)enJOIN_TO_MATCH_ROOM_REPLY_CODE::PLAYER_CAPACITY_IN_ROOM_EXCEEDED;
+		if (!SendPacket(sessionID, reply)) {
+			FreeSerialBuff(reply);
 		}
+		return;
 	}
+
+	matchRoomInfo.players.insert(sessionID);	// 플레이어 추가
+	m_PlayerSessionInLobby.erase(sessionID);		// 로비 대기 유저에서 제외
 
 	body->REPLY_CODE = (BYTE)enJOIN_TO_MATCH_ROOM_REPLY_CODE::SUCCESS;
 	if (!SendPacket(sessionID, reply)) {
@@ -254,262 +294,57 @@ void HubThread::Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::
 	memcpy(registBody->PLAYER_NAME, playerName.data(), playerName.length());
 	registBody->LENGTH = playerName.length();
 	registBody->PLAYER_ID = playerID;
-	SendMessageGroupToGroup(sessionID, registMsg);
-
+	SendGroupMessage(matchRoomInfo.roomID, registMsg);
 }
 
-//void HubThread::Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::MSG_C2S_QUIT_FROM_MATCH_ROOM& msg) {}
-//void HubThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_START& msg) {}
-//void HubThread::Proc_MSG_C2S_MATCH_READY(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_READY& msg) {}
-// => MatchRoom 스레드에서 처리
-
-/*
-void LobbyThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
+void HubThread::Proc_MSG_S2S_PLAYER_QUIT_FROM_MATCH_ROOM(GroupID groupID, MOW_SERVER::MSG_S2S_PLAYER_QUIT_FROM_MATCH_ROOM& msg)
 {
-	while (recvData.GetUseSize() >= sizeof(WORD)) {
-		WORD type;
-		recvData.Peek(&type);
+	if (msg.QUIT_TYPE == (BYTE)enPLAYER_QUIT_TYPE_FROM_MATCH_ROOM::CANCEL) {
+		UINT16 matchRoomID = groupID;
+		auto iter = m_MatchRoomIdInfoMap.find(matchRoomID);
+		if (iter != m_MatchRoomIdInfoMap.end()) {
+			iter->second.players.erase(msg.SESSION_ID);
+			m_PlayerSessionInLobby.insert(msg.SESSION_ID);
 
-		switch (type) {
-		case enPacketType::COM_REQUSET:
-		{
-			MSG_COM_REPLY msg;
-			recvData >> msg;
-			if (msg.replyCode == enProtocolComRequest::REQ_ENTER_MATCH_LOBBY) {
-				Proc_EnterMatchLobby(sessionID);
-			}
-			break;
+			// 기존 매치룸 리스트 전송
+			SendMatchRoomList(msg.SESSION_ID);
 		}
-		case enPacketType::REQ_SET_PLAYER_NAME:
-		{
-			MSG_REQ_SET_PLAYER_NAME msg;
-			recvData >> msg;
-			cout << "[LobbyThread, REQ_SET_PLAYER_NAME 메시지 수신, sessionID: " << sessionID << endl;
-			if (Proc_SetPlayerName(sessionID, msg)) {
-				cout << "-> 처리 성공" << endl;
-			}
-			else {
-				cout << "-> 처리 실패" << endl;
-			}
-			break;
-		}
-		case enPacketType::REQ_MAKE_MATCH_ROOM:
-		{
-			MSG_REQ_MAKE_ROOM msg;
-			recvData >> msg;
-			cout << "[LobbyThread, REQ_MAKE_MATCH_ROOM 메시지 수신, sessionID: " << sessionID << endl;
-			if (Proc_MakeRoom(sessionID, msg)) {
-				cout << "-> 처리 성공" << endl;
-			}
-			else {
-				cout << "-> 처리 실패" << endl;
-			}
-			break;
-		}
-		case enPacketType::REQ_JOIN_MATCH_ROOM:
-		{
-			MSG_REQ_JOIN_ROOM msg;
-			recvData >> msg;
-			cout << "[LobbyThread, REQ_JOIN_MATCH_ROOM 메시지 수신, sessionID: " << sessionID << endl;
-			if (Proc_JoinRoom(sessionID, msg)) {
-				cout << "-> 처리 성공" << endl;
-			}
-			else {
-				cout << "-> 처리 실패" << endl;
-			}
-			break;
-		}
-		default:
-		{
-			DebugBreak();
-		}
+	}
+}
+
+void HubThread::Proc_MSG_S2S_MATCH_ROOM_CLOSE(GroupID groupID, MOW_SERVER::MSG_S2S_MATCH_ROOM_CLOSE& msg)
+{
+	if (msg.CLOSE_CODE == (BYTE)enMATCH_ROOM_CLOSE_CODE::EMPTY_PLAYER) {
+
+	}
+
+	UINT16 matchRoomID = groupID;
+	auto iter = m_MatchRoomIdInfoMap.find(matchRoomID);
+	if (iter != m_MatchRoomIdInfoMap.end()) {
+		DeleteGroup(groupID);		// 매치룸 그룹 스레드 삭제 요청
+		m_MatchRoomIdInfoMap.erase(iter);
+	}
+
+	for (auto iter = m_MatchRoomList.begin(); iter != m_MatchRoomList.end(); iter++) {
+		if (*iter == matchRoomID) {
+
+			JBuffer* closeRoom = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_ROOM_LIST));
+			MOW_HUB::MSG_S2C_MATCH_ROOM_LIST* body = closeRoom->DirectReserve<MOW_HUB::MSG_S2C_MATCH_ROOM_LIST>();
+			body->type = MOW_HUB::S2C_MATCH_ROOM_LIST;
+			body->MATCH_ROOM_ID = matchRoomID;
+			body->MATCH_ROOM_INDEX = m_MatchRoomList.size();
+			body->TOTAL_MATCH_ROOM = m_MatchRoomList.size();
+			BroadcastMessageToLobby(closeRoom);
+
+			m_MatchRoomList.erase(iter);
 			break;
 		}
 	}
+
+	BroadcaseMatchRoomList();
 }
 
-bool HubThread::Proc_SetPlayerName(SessionID64 sessionID, MSG_REQ_SET_PLAYER_NAME& msg)
+void HubThread::Proc_MSG_S2S_GAME_START_FROM_MATCH_ROOM(GroupID groupID, MOW_SERVER::MSG_S2S_GAME_START_FROM_MATCH_ROOM& msg)
 {
-	bool ret; 
 
-	char* playerName = new char(msg.playerNameLen + 1);
-	memcpy(playerName, msg.playerName, msg.playerNameLen);
-	playerName[msg.playerNameLen] = 0;
-
-	string strName = playerName;
-
-	JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_COM_REPLY));
-	MSG_COM_REPLY* body = reply->DirectReserve<MSG_COM_REPLY>();
-	body->type = enPacketType::COM_REPLY;
-
-	auto iter = m_PlayerIdMap.find(sessionID);
-	if (iter == m_PlayerIdMap.end()) {
-		//body->replyCode = enProtocolComReply::SET_PLAYER_NAME_FAIL;
-		//if (!SendPacket(sessionID, reply)) {
-		//	FreeSerialBuff(reply);
-		//}
-		//return false;
-
-		// => 결함으로 식별
-		DebugBreak();
-	}
-	PlayerID playerID = iter->second;
-
-	if (m_PlayerNameSet.find(strName) == m_PlayerNameSet.end()) {
-		m_PlayerNameSet.insert(strName);
-		m_PlayerInfoMap.insert({ sessionID, {strName, playerID} });
-		// 생성 가능
-		body->replyCode = enProtocolComReply::SET_PLAYER_NAME_SUCCESS;
-
-		ret = true;
-	}
-	else {
-		// 생성 불가
-		body->replyCode = enProtocolComReply::SET_PLAYER_NAME_FAIL;
-		
-		ret = false;
-	}
-
-	if (!SendPacket(sessionID, reply)) {
-		FreeSerialBuff(reply);
-		ret = false;
-	}
-
-	return ret;
 }
-
-bool HubThread::Proc_MakeRoom(SessionID64 sessionID, MSG_REQ_MAKE_ROOM& msg)
-{
-	char* roomName = new char(msg.roomNameLen+ 1);
-	memcpy(roomName, msg.roomName, msg.roomNameLen);
-	roomName[msg.roomNameLen] = 0;
-
-	string strName = roomName;
-
-	JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_COM_REPLY));
-	MSG_COM_REPLY* body = reply->DirectReserve<MSG_COM_REPLY>();
-	body->type = enPacketType::COM_REPLY;
-
-	auto iter = m_PlayerIdMap.find(sessionID);
-	if (iter == m_PlayerIdMap.end()) {
-		body->replyCode = enProtocolComReply::MAKE_MATCH_ROOM_FAIL;
-		if (!SendPacket(sessionID, reply)) {
-			FreeSerialBuff(reply);
-		}	// => 마찬가지로 결함으로 식별?
-		return false;;
-	}
-	//PlayerID playerID = iter->second;
-
-	if (m_RoomNameSet.find(strName) == m_RoomNameSet.end()) {
-		if (!m_AllocRoomIdQueue.empty()) {
-			//*reply << static_cast<WORD>(enMakeMatchRoomSuccess);
-			// MatchRoom 쓰레드에서 송신?
-			RoomID newMatchRoom = m_AllocRoomIdQueue.front();
-			m_AllocRoomIdQueue.pop();
-
-			m_RoomIdNameMap.insert({ newMatchRoom, strName });
-			m_RoomNameSet.insert(strName);
-
-			MatchRoomThread* matchRoomThread = new MatchRoomThread();
-			CreateGroup(newMatchRoom, matchRoomThread);
-
-			ForwardSessionToGroup(sessionID, newMatchRoom);
-
-			JBuffer* registBuff = AllocSerialBuff();
-			MSG_REGIST_ROOM* registMsg = registBuff->DirectReserve<MSG_REGIST_ROOM>();
-			registMsg->type = enPacketType::FWD_REGIST_MATCH_ROOM;
-			memcpy(registMsg->playerName, m_PlayerInfoMap[sessionID].playerName.c_str(), m_PlayerInfoMap[sessionID].playerName.length());
-			registMsg->playerNameLen = m_PlayerInfoMap[sessionID].playerName.length();
-			registMsg->playerType = enPlayerTypeInMatchRoom::Manager;
-			
-			SendMessageGroupToGroup(sessionID, registBuff);
-			return true;
-		}
-	}
-	
-	// 생성 불가
-	body->replyCode = enProtocolComReply::MAKE_MATCH_ROOM_FAIL;
-	if (!SendPacket(sessionID, reply)) {
-		FreeSerialBuff(reply);
-	}
-	return false;
-}
-
-
-bool HubThread::Proc_EnterMatchLobby(SessionID64 sessionID)
-{
-	JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_COM_REPLY));
-	MSG_COM_REPLY* body = reply->DirectReserve<MSG_COM_REPLY>();
-	body->type = enPacketType::COM_REPLY;
-	body->replyCode = enProtocolComReply::ENTER_MATCH_LOBBY_SUCCESS;
-
-	if (!SendPacket(sessionID, reply)) {
-		FreeSerialBuff(reply);
-		return false;
-	}
-
-	
-
-	// 기존 생성된 방 목록 전달
-	int roomOrder = 0;
-	for (auto room : m_RoomIdNameMap) {
-		RoomID roomID = room.first;
-		string roomName = room.second;
-
-		JBuffer* msg = AllocSerialSendBuff(sizeof(MSG_SERVE_ROOM_LIST));
-		MSG_SERVE_ROOM_LIST* body = msg->DirectReserve<MSG_SERVE_ROOM_LIST>();
-		//WORD type;
-		//char roomName[PROTOCOL_CONSTANT::MAX_OF_ROOM_NAME_LEN];
-		//INT roomNameLen;
-		//uint16 roomID;
-		//BYTE order;
-		body->type = enPacketType::SERVE_MATCH_ROOM_LIST;
-		memcpy(body->roomName, roomName.c_str(), roomName.length());
-		body->roomNameLen = roomName.length();
-		body->roomID = roomID;
-		body->order = roomOrder++;
-
-		if (!SendPacket(sessionID, msg)) {
-			FreeSerialBuff(msg);
-		}
-	}
-}
-
-bool HubThread::Proc_JoinRoom(SessionID64 sessionID, MSG_REQ_JOIN_ROOM& msg)
-{
-	bool ret;
-
-	JBuffer* reply = AllocSerialSendBuff(sizeof(MSG_COM_REPLY));
-	MSG_COM_REPLY* body = reply->DirectReserve<MSG_COM_REPLY>();
-	body->type = enPacketType::COM_REPLY;
-
-	auto iter = m_RoomIdNameMap.find(msg.roomID);
-	if (iter != m_RoomIdNameMap.end()) {
-		// 유효한 방
-		ForwardSessionToGroup(sessionID, msg.roomID);
-		body->replyCode = enProtocolComReply::JOIN_MATCH_ROOM_SUCCESS;
-
-		JBuffer* registBuff = AllocSerialBuff();
-		MSG_REGIST_ROOM* registMsg = registBuff->DirectReserve<MSG_REGIST_ROOM>();
-		registMsg->type = enPacketType::FWD_REGIST_MATCH_ROOM;
-		memcpy(registMsg->playerName, m_PlayerInfoMap[sessionID].playerName.c_str(), m_PlayerInfoMap[sessionID].playerName.length());
-		registMsg->playerNameLen = m_PlayerInfoMap[sessionID].playerName.length();
-		registMsg->playerType = enPlayerTypeInMatchRoom::Manager;
-
-		SendMessageGroupToGroup(sessionID, registBuff);
-
-		ret = true;
-	}
-	else {
-		body->replyCode = enProtocolComReply::JOIN_MATCH_ROOM_FAIL;
-		ret = false;
-	}
-
-	if (!SendPacket(sessionID, reply)) {
-		FreeSerialBuff(reply);
-		ret = false;
-	}
-
-	return ret;
-}
-*/

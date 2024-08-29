@@ -19,7 +19,7 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			JBuffer* connMsg = AllocSerialBuff();
 			MOW_HUB::MSG_C2S_CONNECTION* body = connMsg->DirectReserve<MOW_HUB::MSG_C2S_CONNECTION>();
 			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MOW_HUB::MSG_C2S_CONNECTION));
-			SendMessageGroupToGroup(sessionID, connMsg);
+			ForwardSessionMessage(sessionID, connMsg);
 		}
 		break;
 		case MOW_BATTLE_FIELD::C2S_ENTER_TO_BATTLE_FIELD:
@@ -34,7 +34,7 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			JBuffer* fwdCrtMsg = AllocSerialBuff();
 			MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE* body = fwdCrtMsg->DirectReserve< MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE>();
 			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE));
-			SendMessageGroupToGroup(sessionID, fwdCrtMsg);
+			ForwardSessionMessage(sessionID, fwdCrtMsg);
 		}
 		break;
 		default:

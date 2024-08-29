@@ -1,6 +1,6 @@
 #pragma once
 #include <JNetCore.h>	
-//#include "Protocol.h"
+#include "Protocol.h"
 #include "Protocol_old.h"
 #include "UnitObject.h"	
 
@@ -9,8 +9,8 @@ using namespace jgroup;
 
 class BattleThread : public JNetGroupThread
 {
-	using UnitID = int;
-	using TeamID = int;
+	using UnitID = INT;
+	using TeamID = BYTE;
 
 	const float AcceptablePositionDiff = 3.0f;
 
@@ -40,6 +40,11 @@ private:
 	
 	int m_UnitAllocID = 0;
 
+public:
+	BattleThread(const std::vector<std::pair<SessionID64, string>>& playerInfos) {
+
+	}
+
 private:
 	virtual void OnStart() override 
 	{
@@ -62,6 +67,7 @@ private:
 	virtual void OnLeaveClient(SessionID64 sessionID) override {}
 
 	virtual void OnMessage(SessionID64 sessionID, JBuffer& recvData) override;
+	virtual void OnGroupMessage(GroupID groupID, JBuffer& msg) override {}
 
 	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
 	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);

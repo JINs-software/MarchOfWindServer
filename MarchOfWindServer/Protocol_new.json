@@ -5,6 +5,13 @@
     "CLIENT_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWind_Unity_Client\\Assets\\Script\\RPC",
   "JPD_Enums": [
     {
+      "Name": "enPLAYER_QUIT_TYPE_FROM_MATCH_ROOM",
+      "Fields": [
+        "CANCEL",
+        "DISCONNECTION"
+      ]
+    },
+    {
       "Name": "enCONNECTION_REPLY_CODE",
       "Fields": [
         "SUCCESS",
@@ -38,6 +45,18 @@
         "NO_HOST_PRIVILEGES",
         "UNREADY_PLAYER_PRESENT"
       ]
+    },
+    {
+      "Name": "enMATCH_ROOM_CLOSE_CODE",
+      "Fields": [
+        "EMPTY_PLAYER"
+      ]
+    },
+    {
+      "Name": "enATTACK_TYPE",
+      "Fields": [
+        "BASE"
+      ]
     }
   ],
   "JPD_ConstGroups": [],
@@ -51,6 +70,11 @@
           "ID": "",
           "Dir": "S2S",
           "Param": [
+            {
+              "Type": "UINT64",
+              "Name": "SESSION_ID",
+              "FixedLenOfArray": ""
+            },
             {
               "Type": "CHAR",
               "Name": "PLAYER_NAME",
@@ -67,6 +91,47 @@
               "FixedLenOfArray": ""
             }
           ]
+        },
+        {
+          "Message": "PLAYER_QUIT_FROM_MATCH_ROOM",
+          "ID": "",
+          "Dir": "S2S",
+          "Param": [
+            {
+              "Type": "UINT64",
+              "Name": "SESSION_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "QUIT_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "MATCH_ROOM_CLOSE",
+          "ID": "",
+          "Dir": "S2S",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "CLOSE_CODE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "GAME_START_FROM_MATCH_ROOM",
+          "ID": "",
+          "Dir": "S2S",
+          "Param": []
+        },
+        {
+          "Message": "GAME_END_FROM_BATTLE_FIELD",
+          "ID": "",
+          "Dir": "S2S",
+          "Param": []
         }
       ]
     },
@@ -193,7 +258,7 @@
         },
         {
           "Message": "JOIN_TO_MATCH_ROOM",
-          "ID": "1008",
+          "ID": "1007",
           "Dir": "C2S",
           "Param": [
             {
@@ -205,7 +270,7 @@
         },
         {
           "Message": "JOIN_TO_MATCH_ROOM_REPLY",
-          "ID": "1009",
+          "ID": "1008",
           "Dir": "S2C",
           "Param": [
             {
@@ -217,13 +282,13 @@
         },
         {
           "Message": "QUIT_FROM_MATCH_ROOM",
-          "ID": "1010",
+          "ID": "1009",
           "Dir": "C2S",
           "Param": []
         },
         {
           "Message": "MATCH_PLAYER_LIST",
-          "ID": "1011",
+          "ID": "1010",
           "Dir": "S2C",
           "Param": [
             {
@@ -255,19 +320,13 @@
         },
         {
           "Message": "MATCH_START",
-          "ID": "1012",
-          "Dir": "C2S",
-          "Param": []
-        },
-        {
-          "Message": "MATCH_READY",
-          "ID": "1013",
+          "ID": "1011",
           "Dir": "C2S",
           "Param": []
         },
         {
           "Message": "MATCH_START_REPLY",
-          "ID": "1014",
+          "ID": "1012",
           "Dir": "S2C",
           "Param": [
             {
@@ -278,16 +337,28 @@
           ]
         },
         {
-          "Message": "CHANGE_MATCH_HOST",
-          "ID": "1015",
+          "Message": "MATCH_READY",
+          "ID": "1013",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "MATCH_READY_REPLY",
+          "ID": "1014",
           "Dir": "S2C",
           "Param": [
             {
               "Type": "UINT16",
-              "Name": "HOST_PLAYER_ID",
+              "Name": "PLAYER_ID",
               "FixedLenOfArray": ""
             }
           ]
+        },
+        {
+          "Message": "LAUNCH_MATCH",
+          "ID": "1015",
+          "Dir": "S2C",
+          "Param": []
         }
       ]
     },
@@ -519,6 +590,413 @@
             {
               "Type": "float",
               "Name": "ATTACK_DELAY",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_MOVE",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "MOVE_TYPE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_MOVE",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "TEAM"
+            },
+            {
+              "Type": "BYTE",
+              "Name": "MOVE_TYPE",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "SPEED",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_SYNC_POSITION",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_TRACE_PATH_FINDING_REQ",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "SPATH_ID"
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "DEST_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_TRACE_PATH_FINDING_COMPLETE",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "SPATH_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_TRACE_PATH",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "SPATH_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "SPATH_OPT",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_ATTACK",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "TARGET_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_ATTACK",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "TARGET_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_ATTACK",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "TARGET_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_ATTACK",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INIT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "TARGET_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_DAMAGE",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INIT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "HP",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_DIE",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INIT",
+              "Name": "UNIT_ID",
               "FixedLenOfArray": ""
             }
           ]

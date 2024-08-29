@@ -26,7 +26,7 @@
     <ClInclude Include="stdafx.h">
       <Filter>precomiled</Filter>
     </ClInclude>
-    <ClInclude Include="Protocol_backup.h" />
+    <ClInclude Include="Protocol_jpd_old.h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>

@@ -9,6 +9,49 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 
 		switch (type)
 		{
+		case MOW_PRE_BATTLE_FIELD::C2S_READY_TO_BATTLE:
+		{
+
+		}
+		break;
+		case MOW_PRE_BATTLE_FIELD::C2S_ENTER_TO_SELECT_FIELD:
+		{
+
+		}
+		break;
+		case MOW_PRE_BATTLE_FIELD::C2S_SELECTOR_OPTION:
+		{
+
+		}
+		break;
+		case MOW_BATTLE_FIELD::C2S_ENTER_TO_BATTLE_FIELD:
+		{
+		}
+		break;
+		case MOW_BATTLE_FIELD::C2S_UNIT_CONN_TO_BATTLE_FIELD:
+		{
+
+		}
+		break;
+		case MOW_BATTLE_FIELD::C2S_UNIT_S_CREATE:
+		{
+
+		}
+		break;
+		default:
+			break;
+		}
+	}
+}
+/*
+void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
+{
+	while (recvData.GetUseSize() >= sizeof(WORD)) {
+		WORD type;
+		recvData.Peek(&type);
+
+		switch (type)
+		{
 		case enPacketType::FWD_PLAYER_INFO_TO_BATTLE_THREAD:
 		{
 			MSG_FWD_PLAYER_INFO msg;
@@ -139,6 +182,7 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		}
 	}
 }
+*/
 
 void BattleThread::Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg)
 {

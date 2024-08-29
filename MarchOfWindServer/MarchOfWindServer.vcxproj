@@ -146,7 +146,7 @@
     <ClInclude Include="MOWServer.h" />
     <ClInclude Include="PathFindingWork.h" />
     <ClInclude Include="Protocol.h" />
-    <ClInclude Include="Protocol_backup.h" />
+    <ClInclude Include="Protocol_jpd_old.h" />
     <ClInclude Include="Protocol_old.h" />
     <ClInclude Include="ProtocolExt.h" />
     <ClInclude Include="stdafx.h" />
