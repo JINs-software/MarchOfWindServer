@@ -1,8 +1,8 @@
 {
-    "SERVER_COMPILE_MODE": "HEADER_ONLY",
-    "SERVER_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWindServer\\MarchOfWindServer",
-    "CLIENT_COMPILE_MODE": "RPC",
-    "CLIENT_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWind_Unity_Client\\Assets\\Script\\RPC",
+  "SERVER_COMPILE_MODE": "HEADER_ONLY",
+  "SERVER_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWindServer\\MarchOfWindServer",
+  "CLIENT_COMPILE_MODE": "RPC",
+  "CLIENT_OUTPUT_DIR": "D:\\0. GameServer\\Project\\MarchOfWind_Unity_Client\\Assets\\Script\\RPC",
   "JPD_Enums": [
     {
       "Name": "enPLAYER_QUIT_TYPE_FROM_MATCH_ROOM",
@@ -840,6 +840,29 @@
         },
         {
           "Message": "S_PLAYER_LAUNCH_ATTACK",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "UNIT_S_STOP_ATTACK",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": []
+        },
+        {
+          "Message": "S_PLAYER_STOP_ATTACK",
           "ID": "",
           "Dir": "S2C",
           "Param": [

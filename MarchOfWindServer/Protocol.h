@@ -45,6 +45,19 @@ enum class enMATCH_ROOM_CLOSE_CODE
     EMPTY_PLAYER,
 };
 
+enum class enUNIT_TYPE
+{
+    Terran_Marine,
+    Terran_Firebat,
+    Terran_Tank,
+    Terran_Robocop,
+    Zerg_Zergling,
+    Zerg_Hydra,
+    Zerg_Golem,
+    Zerg_Tarantula,
+    None,
+};
+
 enum class enMOVE_TYPE
 {
     MOVE_START,
@@ -288,10 +301,12 @@ namespace MOW_BATTLE_FIELD
     static const WORD S2C_S_PLAYER_TRACE_PATH = 3009;
     static const WORD C2S_UNIT_S_LAUNCH_ATTACK = 3010;
     static const WORD S2C_S_PLAYER_LAUNCH_ATTACK = 3011;
-    static const WORD C2S_UNIT_S_ATTACK = 3012;
-    static const WORD S2C_S_PLAYER_ATTACK = 3013;
-    static const WORD S2C_S_PLAYER_DAMAGE = 3014;
-    static const WORD S2C_S_PLAYER_DIE = 3015;
+    static const WORD C2S_UNIT_S_STOP_ATTACK = 3012;
+    static const WORD S2C_S_PLAYER_STOP_ATTACK = 3013;
+    static const WORD C2S_UNIT_S_ATTACK = 3014;
+    static const WORD S2C_S_PLAYER_ATTACK = 3015;
+    static const WORD S2C_S_PLAYER_DAMAGE = 3016;
+    static const WORD S2C_S_PLAYER_DIE = 3017;
 
 #pragma pack(push, 1)
 
@@ -402,12 +417,22 @@ namespace MOW_BATTLE_FIELD
         BYTE SPATH_OPT;
     };
 
-    struct MSG_C2S_UNIT_S_LAUNCH_ATTACK
-    {
+    struct MSG_C2S_UNIT_S_LAUNCH_ATTACK {
         WORD type;
     };
 
     struct MSG_S2C_S_PLAYER_LAUNCH_ATTACK
+    {
+        WORD type;
+        INT UNIT_ID;
+        BYTE TEAM;
+    };
+
+    struct MSG_C2S_UNIT_S_STOP_ATTACK {
+        WORD type;
+    };
+
+    struct MSG_S2C_S_PLAYER_STOP_ATTACK
     {
         WORD type;
         INT UNIT_ID;

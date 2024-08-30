@@ -81,6 +81,13 @@ void BattleThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			Proc_MSG_C2S_UNIT_S_LAUNCH_ATTACK(sessionID, msg);
 		}
 		break;
+		case MOW_BATTLE_FIELD::C2S_UNIT_S_STOP_ATTACK:
+		{
+			MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_STOP_ATTACK msg;
+			recvData >> msg;
+			Proc_MSG_C2S_UNIT_S_STOP_ATTACK(sessionID, msg);
+		}
+		break;
 		case MOW_BATTLE_FIELD::C2S_UNIT_S_ATTACK:
 		{
 			MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_ATTACK msg;
@@ -303,6 +310,21 @@ void BattleThread::Proc_MSG_C2S_UNIT_S_LAUNCH_ATTACK(SessionID64 sessionID, MOW_
 		*attackLaunch << unitInfo->team;
 
 		BroadcastToPlayerInField(attackLaunch, true);
+	}
+}
+
+void BattleThread::Proc_MSG_C2S_UNIT_S_STOP_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_STOP_ATTACK& msg)
+{
+	auto iter = m_UnitSessionObjMap.find(sessionID);
+	if (iter != m_UnitSessionObjMap.end()) {
+		UnitInfo* unitInfo = iter->second->GetUnitInfo();
+
+		JBuffer* attackStop = AllocSerialSendBuff(sizeof(MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_STOP_ATTACK));
+		*attackStop << (WORD)MOW_BATTLE_FIELD::S2C_S_PLAYER_LAUNCH_ATTACK;
+		*attackStop << unitInfo->ID;
+		*attackStop << unitInfo->team;
+
+		BroadcastToPlayerInField(attackStop, true);
 	}
 }
 
