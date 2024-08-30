@@ -181,7 +181,7 @@ void MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::M
 	for (const auto& p : m_PlayerList) {
 		playerInfos.push_back({ p.first, p.second.playerName });
 	}
-	m_BattleThrd = new BattleThread(playerInfos);
+	m_BattleThrd = new BattleThread(m_RoomID + 1000, playerInfos);
 	CreateGroup(m_RoomID + 1000, m_BattleThrd);
 	for (const auto& p : m_PlayerList) {
 		ForwardSessionToGroup(p.first, m_RoomID + 1000);

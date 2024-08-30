@@ -19,6 +19,7 @@ private:
 	INT m_NumOfPlayers;
 	INT m_AliveOfPlayers;
 	INT m_UnitAllocID;
+	UINT16 m_BattleFieldID;
 
 	struct PlayerInfo {
 		SessionID64 sessionID;
@@ -43,8 +44,8 @@ private:
 	
 
 public:
-	BattleThread(const std::vector<std::pair<SessionID64, string>>& playerInfos) 
-		: m_AliveOfPlayers(0), m_UnitAllocID(0)
+	BattleThread(UINT16 battleFieldID, const std::vector<std::pair<SessionID64, string>>& playerInfos) 
+		: m_BattleFieldID(battleFieldID), m_AliveOfPlayers(0), m_UnitAllocID(0)
 	{
 		m_NumOfPlayers = playerInfos.size();
 

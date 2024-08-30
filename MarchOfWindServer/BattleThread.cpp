@@ -105,6 +105,14 @@ void BattleThread::Proc_MSG_C2S_READY_TO_BATTLE(SessionID64 sessionID, MOW_PRE_B
 	playerInfo.entrance = true;
 	m_AliveOfPlayers++;
 
+	JBuffer* reply = AllocSerialSendBuff(sizeof(MOW_PRE_BATTLE_FIELD::MSG_S2C_READY_TO_BATTLE_REPLY));
+	*reply << (WORD)MOW_PRE_BATTLE_FIELD::S2C_READY_TO_BATTLE_REPLY;
+	*reply << m_BattleFieldID;
+	*reply << (BYTE)m_PlayerInfos[sessionID].team;
+	if (!SendPacket(sessionID, reply)) {
+		FreeSerialBuff(reply);
+	}
+
 	if (m_AliveOfPlayers == m_NumOfPlayers) {
 		JBuffer* launchMsg = AllocSerialSendBuff(sizeof(MOW_PRE_BATTLE_FIELD::MSG_S2C_ALL_PLAYER_READY));
 		*launchMsg << (WORD)MOW_PRE_BATTLE_FIELD::S2C_ALL_PLAYER_READY;
@@ -173,7 +181,7 @@ void BattleThread::Proc_MSG_C2S_UNIT_S_CREATE(SessionID64 sessionID, MOW_BATTLE_
 
 	UnitObject* newUnitObject = new UnitObject(unitInfo, m_UpdateThread);
 	m_UnitSessionObjMap.insert({ sessionID, newUnitObject } );
-	m_UnitSessionObjMap.insert({ unitInfo->ID, newUnitObject });
+	m_UnitIDObjMap.insert({ unitInfo->ID, newUnitObject });
 	m_UpdateThread->RegistGameObject(newUnitObject);
 
 	JBuffer* crtMsg = AllocSerialSendBuff(sizeof(MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_CREATE));
@@ -440,7 +448,7 @@ void BattleThread::BroadcastToPlayerInField(JBuffer* msg, bool battleField, BYTE
 void BattleThread::BroadcastToPlayer(JBuffer* msg, BYTE exceptTeam)
 {
 	for (auto player : m_PlayerInfos) {
-		if (player.second.onBattleField && player.second.team != exceptTeam) {
+		if (player.second.team != exceptTeam) {
 			AddRefSerialBuff(msg);
 			if (!SendPacket(player.first, msg)) {
 				FreeSerialBuff(msg);

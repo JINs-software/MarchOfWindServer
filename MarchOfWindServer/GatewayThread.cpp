@@ -22,7 +22,7 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			ForwardSessionMessage(sessionID, connMsg);
 		}
 		break;
-		case MOW_BATTLE_FIELD::C2S_ENTER_TO_BATTLE_FIELD:
+		case MOW_BATTLE_FIELD::C2S_UNIT_CONN_TO_BATTLE_FIELD:
 		{
 			MOW_BATTLE_FIELD::MSG_C2S_UNIT_CONN_TO_BATTLE_FIELD msg;
 			recvData >> msg;
