@@ -12,25 +12,28 @@ class BattleThread : public JNetGroupThread
 	using UnitID = INT;
 	using TeamID = BYTE;
 
-	const float AcceptablePositionDiff = 3.0f;
+	const BYTE	INIT_SELECTOR_CNT = 1;
+	const float ACCEPTABLE_POSITION_DIFF = 3.0f;
 
 private:
-	int m_NumOfPlayers = 0;
-	int m_AliveOfPlayers = 0;
+	INT m_NumOfPlayers;
+	INT m_AliveOfPlayers;
+	INT m_UnitAllocID;
 
 	struct PlayerInfo {
 		SessionID64 sessionID;
 		string playerName;
 		enPlayerTeamInBattleField team;
-		int numOfSelectors = 1;
-		bool inBattle = false;
+		BYTE numOfSelectors = 1;
+		bool entrance = false;
+		bool onBattleField = false;
 	};
+
 	std::map<SessionID64, PlayerInfo>	m_PlayerInfos;
 	std::map<int, PlayerInfo>			m_TeamToPlayerInfoMap;
 
-	std::map<SessionID64, UnitID> m_SessionToUnitIdMap;
-	std::map<UnitID, UnitObject*> m_UnitObjects;
-	std::map<UnitID, UnitInfo*> m_UnitInfos;
+	std::map<SessionID64, UnitObject*>	m_UnitSessionObjMap;
+	std::map<UnitID, UnitObject*>	m_UnitIDObjMap;
 
 	// 업데이트 스레드
 	MoveUpdateThread* m_UpdateThread;
@@ -38,11 +41,22 @@ private:
 	// 배치 스레드
 	HANDLE m_BatchThread;
 	
-	int m_UnitAllocID = 0;
 
 public:
-	BattleThread(const std::vector<std::pair<SessionID64, string>>& playerInfos) {
+	BattleThread(const std::vector<std::pair<SessionID64, string>>& playerInfos) 
+		: m_AliveOfPlayers(0), m_UnitAllocID(0)
+	{
+		m_NumOfPlayers = playerInfos.size();
 
+		for (BYTE i = 0; i < playerInfos.size(); i++) {
+			SessionID64 sessionID = playerInfos[i].first;
+
+			m_PlayerInfos.insert({ playerInfos[i].first, PlayerInfo {
+				playerInfos[i].first, playerInfos[i].second,
+				(enPlayerTeamInBattleField)i, INIT_SELECTOR_CNT,
+				true, false
+				}});
+		}
 	}
 
 private:
@@ -69,6 +83,19 @@ private:
 	virtual void OnMessage(SessionID64 sessionID, JBuffer& recvData) override;
 	virtual void OnGroupMessage(GroupID groupID, JBuffer& msg) override {}
 
+	void Proc_MSG_C2S_READY_TO_BATTLE(SessionID64 sessionID, MOW_PRE_BATTLE_FIELD::MSG_C2S_READY_TO_BATTLE& msg);
+	void Proc_MSG_C2S_ENTER_TO_SELECT_FIELD(SessionID64 sessionID, MOW_PRE_BATTLE_FIELD::MSG_C2S_ENTER_TO_SELECT_FIELD& msg);
+	void Proc_MSG_C2S_SELECTOR_OPTION(SessionID64 sessionID, MOW_PRE_BATTLE_FIELD::MSG_C2S_SELECTOR_OPTION& msg);
+
+	void Proc_MSG_C2S_ENTER_TO_BATTLE_FIELD(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_ENTER_TO_BATTLE_FIELD& msg);
+	void Proc_MSG_C2S_UNIT_CONN_TO_BATTLE_FIELD(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_CONN_TO_BATTLE_FIELD& msg);
+	void Proc_MSG_C2S_UNIT_S_CREATE(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE& msg);
+	void Proc_MSG_C2S_UNIT_S_MOVE(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_MOVE& msg);
+	void Proc_MSG_C2S_UNIT_S_SYNC_POSITION(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_SYNC_POSITION& msg);
+	void Proc_MSG_C2S_UNIT_S_TRACE_PATH_FINDING_REQ(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_TRACE_PATH_FINDING_REQ& msg);
+	void Proc_MSG_C2S_UNIT_S_LAUNCH_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_LAUNCH_ATTACK& msg);
+	void Proc_MSG_C2S_UNIT_S_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_ATTACK& msg);
+
 	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
 	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
 	void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
@@ -78,12 +105,9 @@ private:
 	void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
 	void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);
 
-	void BroadcastDamageMsg(UnitID targetID, int renewHP);
-	void BroadcastDieMsg(UnitID targetID);
-
-	void UnicastToGameManager(JBuffer* msg, int team);
-	void BroadcastToGameManager(JBuffer* msg);
-	void BroadcastToGameManager(JBuffer* msg, int exceptionTeam);
+	void UnicastToPlayer(JBuffer* msg, BYTE team);
+	void BroadcastToPlayerInField(JBuffer* msg, bool battleField, BYTE exceptTeam = -1);
+	void BroadcastToPlayer(JBuffer* msg, BYTE exceptTeam = -1);
 
 	void SendExistingUnits(SessionID64 sessionID);
 

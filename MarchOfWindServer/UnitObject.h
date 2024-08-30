@@ -23,7 +23,7 @@ struct UnitInfo {
 
 	float attackRate;		// 2: 0.5초에 한 번 공격, 1: 1초에 한 번 공격, 0.5: 2초에 한 번 공격, 0.3: 3.3에 한 번 공격
 	float attackCoolTimeMs;
-	clock_t lastClockMs;
+	clock_t timeStamp;
 
 	float attackDelay;
 
@@ -115,8 +115,8 @@ struct UnitInfo {
 	*/
 
 	bool CanAttack(clock_t clockMs) {
-		clock_t delta = clockMs - lastClockMs;
-		lastClockMs = clockMs;
+		clock_t delta = clockMs - timeStamp;
+		timeStamp = clockMs;
 
 		attackCoolTimeMs -= delta;
 
@@ -133,9 +133,7 @@ class UnitObject : public GameObject {
 private:
 	UnitInfo* m_UnitInfo = NULL;
 	MoveUpdateThread* UpdateThread;
-
-	std::set<pair<int, int>> colliders;
-	//std::vector<std::string> logs;
+	std::set<pair<int, int>> colliders;;
 
 public:
 	UnitObject(UnitInfo* unitInfo, MoveUpdateThread* updateThread) {
@@ -148,6 +146,9 @@ public:
 		//UpdateThread->ResetCollder(m_UnitInfo->posX, m_UnitInfo->posZ, m_UnitInfo->radius, false);
 		delete m_UnitInfo;
 	}
+
+	inline UnitInfo* GetUnitInfo() { return m_UnitInfo; }
+	inline UnitInfo* GetUnitInfo() const { return m_UnitInfo; }
 
 private:
 	virtual void OnStart() override {

@@ -53,6 +53,27 @@
       ]
     },
     {
+      "Name": "enUNIT_TYPE",
+      "Fields": [
+        "Terran_Marine",
+        "Terran_Firebat",
+        "Terran_Tank",
+        "Terran_Robocop",
+        "Zerg_Zergling",
+        "Zerg_Hydra",
+        "Zerg_Golem",
+        "Zerg_Tarantula",
+        "None"
+      ]
+    },
+    {
+      "Name": "enMOVE_TYPE",
+      "Fields": [
+        "MOVE_START",
+        "MOVE_STOP"
+      ]
+    },
+    {
       "Name": "enATTACK_TYPE",
       "Fields": [
         "BASE"
@@ -375,13 +396,8 @@
         {
           "Message": "READY_TO_BATTLE_REPLY",
           "ID": "2001",
-          "Dir": "S2S",
+          "Dir": "S2C",
           "Param": [
-            {
-              "Type": "BYTE",
-              "Name": "REPLY_CODE",
-              "FixedLenOfArray": ""
-            },
             {
               "Type": "UINT16",
               "Name": "BATTLE_FIELD_ID",
@@ -389,10 +405,16 @@
             },
             {
               "Type": "BYTE",
-              "Name": "TEAM_CODE",
+              "Name": "TEAM",
               "FixedLenOfArray": ""
             }
           ]
+        },
+        {
+          "Message": "ALL_PLAYER_READY",
+          "ID": "2002",
+          "Dir": "S2C",
+          "Param": []
         },
         {
           "Message": "ENTER_TO_SELECT_FIELD",
@@ -405,11 +427,6 @@
           "ID": "2003",
           "Dir": "S2C",
           "Param": [
-            {
-              "Type": "BYTE",
-              "Name": "REPLY_CODE",
-              "FixedLenOfArray": ""
-            },
             {
               "Type": "BYTE",
               "Name": "SELECTOR_COUNT",
@@ -492,7 +509,7 @@
             },
             {
               "Type": "BYTE",
-              "Name": "TEAM_CODE",
+              "Name": "TEAM",
               "FixedLenOfArray": ""
             },
             {
@@ -528,13 +545,18 @@
               "FixedLenOfArray": ""
             },
             {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
               "Type": "BYTE",
               "Name": "UNIT_TYPE",
               "FixedLenOfArray": ""
             },
             {
               "Type": "BYTE",
-              "Name": "TEAM_CODE",
+              "Name": "TEAM",
               "FixedLenOfArray": ""
             },
             {
@@ -558,13 +580,13 @@
               "FixedLenOfArray": ""
             },
             {
-              "Type": "UINT16",
-              "Name": "UNIT_ID",
+              "Type": "float",
+              "Name": "SPEED",
               "FixedLenOfArray": ""
             },
             {
-              "Type": "float",
-              "Name": "SPEED",
+              "Type": "INT",
+              "Name": "MAX_HP",
               "FixedLenOfArray": ""
             },
             {
@@ -642,8 +664,14 @@
           "Dir": "S2C",
           "Param": [
             {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
               "Type": "BYTE",
-              "Name": "TEAM"
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
             },
             {
               "Type": "BYTE",
@@ -756,7 +784,7 @@
           ]
         },
         {
-          "Message": "S_PLAYER_TRACE_PATH_FINDING_COMPLETE",
+          "Message": "S_PLAYER_TRACE_PATH_FINDING_REPLY",
           "ID": "",
           "Dir": "S2C",
           "Param": [
@@ -805,44 +833,13 @@
           ]
         },
         {
-          "Message": "UNIT_S_ATTACK",
+          "Message": "UNIT_S_LAUNCH_ATTACK",
           "ID": "",
           "Dir": "C2S",
-          "Param": [
-            {
-              "Type": "float",
-              "Name": "POS_X",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "POS_Z",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "NORM_X",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "NORM_Z",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "INT",
-              "Name": "TARGET_ID",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "BYTE",
-              "Name": "ATTACK_TYPE",
-              "FixedLenOfArray": ""
-            }
-          ]
+          "Param": []
         },
         {
-          "Message": "S_PLAYER_ATTACK",
+          "Message": "S_PLAYER_LAUNCH_ATTACK",
           "ID": "",
           "Dir": "S2C",
           "Param": [
@@ -855,36 +852,6 @@
               "Type": "BYTE",
               "Name": "TEAM",
               "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "POS_X",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "POS_Z",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "NORM_X",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "float",
-              "Name": "NORM_Z",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "INT",
-              "Name": "TARGET_ID",
-              "FixedLenOfArray": ""
-            },
-            {
-              "Type": "BYTE",
-              "Name": "ATTACK_TYPE",
-              "FixedLenOfArray": ""
             }
           ]
         },
@@ -931,12 +898,12 @@
           "Dir": "S2C",
           "Param": [
             {
-              "Type": "INIT",
+              "Type": "INT",
               "Name": "UNIT_ID",
               "FixedLenOfArray": ""
             },
             {
-              "Type": "INT",
+              "Type": "BYTE",
               "Name": "TEAM",
               "FixedLenOfArray": ""
             },
@@ -978,7 +945,7 @@
           "Dir": "S2C",
           "Param": [
             {
-              "Type": "INIT",
+              "Type": "INT",
               "Name": "UNIT_ID",
               "FixedLenOfArray": ""
             },
@@ -995,7 +962,7 @@
           "Dir": "S2C",
           "Param": [
             {
-              "Type": "INIT",
+              "Type": "INT",
               "Name": "UNIT_ID",
               "FixedLenOfArray": ""
             }

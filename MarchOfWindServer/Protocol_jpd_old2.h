@@ -2,45 +2,92 @@
 #pragma once
 #include <minwindef.h>
 
-enum class enCONNECTION_REPLY_CODE {
+enum class enPLAYER_QUIT_TYPE_FROM_MATCH_ROOM 
+{
+    CANCEL,
+    DISCONNECTION,
+};
+
+enum class enCONNECTION_REPLY_CODE
+{
     SUCCESS,
     PLAYER_CAPACITY_EXCEEDED,
     INVALID_MSG_FIELD_VALUE,
     PLAYER_NAME_ALREADY_EXIXTS,
 };
 
-enum class enCREATE_MATCH_ROOM_REPLY_CODE {
+enum class enCREATE_MATCH_ROOM_REPLY_CODE
+{
     SUCCESS,
     MATCH_ROOM_CAPACITY_EXCEEDED,
     INVALID_MSG_FIELD_VALUE,
     MATCH_ROOM_NAME_ALREADY_EXIXTS,
 };
 
-enum class enJOIN_TO_MATCH_ROOM_REPLY_CODE {
+enum class enJOIN_TO_MATCH_ROOM_REPLY_CODE
+{
     SUCCESS,
     INVALID_MATCH_ROOM_ID,
     PLAYER_CAPACITY_IN_ROOM_EXCEEDED,
 };
 
-enum class enMATCH_START_REPLY_CODE {
+enum class enMATCH_START_REPLY_CODE
+{
     SUCCESS,
     NOT_FOUND_IN_MATCH_ROOM,
     NO_HOST_PRIVILEGES,
     UNREADY_PLAYER_PRESENT,
 };
 
-namespace MOW_SERVER {
+enum class enMATCH_ROOM_CLOSE_CODE 
+{
+    EMPTY_PLAYER,
+};
+
+namespace MOW_SERVER
+{
     static const WORD S2S_REGIST_PLAYER_TO_MATCH_ROOM = 0;
+    static const WORD S2S_PLAYER_QUIT_FROM_MATCH_ROOM = 1;
+    static const WORD S2S_MATCH_ROOM_CLOSE = 2;
+    static const WORD S2S_GAME_START_FROM_MATCH_ROOM = 3;
+    static const WORD S2S_GAME_END_FROM_BATTLE_FIELD = 4;
 
 #pragma pack(push, 1)
-    struct MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM 
+
+    struct MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM
     {
         WORD type;
+        UINT64 SESSION_ID;
         CHAR PLAYER_NAME[30];
         BYTE LENGTH;
         UINT16 PLAYER_ID;
     };
-}
+
+    struct MSG_S2S_PLAYER_QUIT_FROM_MATCH_ROOM 
+    {
+        WORD type;
+        UINT64 SESSION_ID;
+        BYTE QUIT_TYPE;
+    };
+
+    struct MSG_S2S_MATCH_ROOM_CLOSE
+    {
+        WORD type;
+        BYTE CLOSE_CODE;
+    };
+
+    struct MSG_S2S_GAME_START_FROM_MATCH_ROOM 
+    {
+        WORD type;
+    };
+
+    struct MSG_S2S_GAME_END_FROM_BATTLE_FIELD
+    {
+        WORD type;
+    };
+
+#pragma pack(pop)
+};
 
 namespace MOW_HUB
 {
@@ -56,9 +103,10 @@ namespace MOW_HUB
     static const WORD C2S_QUIT_FROM_MATCH_ROOM = 1009;
     static const WORD S2C_MATCH_PLAYER_LIST = 1010;
     static const WORD C2S_MATCH_START = 1011;
-    static const WORD C2S_MATCH_READY = 1012;
-    static const WORD S2C_MATCH_START_REPLY = 1013;
-    static const WORD S2C_CHANGE_MATCH_HOST = 1014;
+    static const WORD S2C_MATCH_START_REPLY = 1012;
+    static const WORD C2S_MATCH_READY = 1013;
+    static const WORD S2C_MATCH_READY_REPLY = 1014;
+    static const WORD S2C_LAUNCH_MATCH = 1015;
 
 #pragma pack(push, 1)
 
@@ -139,20 +187,25 @@ namespace MOW_HUB
         WORD type;
     };
 
-    struct MSG_C2S_MATCH_READY {
-        WORD type;
-    };
-
     struct MSG_S2C_MATCH_START_REPLY
     {
         WORD type;
         BYTE REPLY_CODE;
     };
 
-    struct MSG_S2C_CHANGE_MATCH_HOST
+    struct MSG_C2S_MATCH_READY {
+        WORD type;
+    };
+
+    struct MSG_S2C_MATCH_READY_REPLY
     {
         WORD type;
-        UINT16 HOST_PLAYER_ID;
+        UINT16 PLAYER_ID;
+    };
+
+    struct MSG_S2C_LAUNCH_MATCH
+    {
+        WORD type;
     };
 
 #pragma pack(pop)
@@ -178,7 +231,7 @@ namespace MOW_PRE_BATTLE_FIELD
         WORD type;
         BYTE REPLY_CODE;
         UINT16 BATTLE_FIELD_ID;
-        BYTE TEAM;
+        BYTE TEAM_CODE;
     };
 
     struct MSG_C2S_ENTER_TO_SELECT_FIELD {
@@ -233,7 +286,7 @@ namespace MOW_BATTLE_FIELD
         WORD type;
         INT CRT_CODE;
         BYTE UNIT_TYPE;
-        BYTE TEAM;
+        BYTE TEAM_CODE;
         float POS_X;
         float POS_Z;
         float NORM_X;
@@ -245,7 +298,7 @@ namespace MOW_BATTLE_FIELD
         WORD type;
         INT CRT_CODE;
         BYTE UNIT_TYPE;
-        BYTE TEAM;
+        BYTE TEAM_CODE;
         float POS_X;
         float POS_Z;
         float NORM_X;

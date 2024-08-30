@@ -27,6 +27,7 @@
       <Filter>precomiled</Filter>
     </ClInclude>
     <ClInclude Include="Protocol_jpd_old.h" />
+    <ClInclude Include="Protocol._jpd_old3h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>
