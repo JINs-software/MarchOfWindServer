@@ -29,20 +29,11 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			ForwardSessionToGroup(sessionID, msg.BATTLE_FIELD_ID);
 		}
 		break;
-		case MOW_BATTLE_FIELD::C2S_UNIT_S_CREATE:
-		{
-			JBuffer* fwdCrtMsg = AllocSerialBuff();
-			MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE* body = fwdCrtMsg->DirectReserve< MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE>();
-			recvData.Dequeue(reinterpret_cast<BYTE*>(body), sizeof(MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_CREATE));
-			ForwardSessionMessage(sessionID, fwdCrtMsg);
-		}
-		break;
 		default:
 		{
 			DebugBreak();
 		}
 		break;
 		}
-
 	}
 }
