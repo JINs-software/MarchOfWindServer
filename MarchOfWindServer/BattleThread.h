@@ -1,11 +1,13 @@
 #pragma once
 #include <JNetCore.h>	
 #include "Protocol.h"
-#include "Protocol_old.h"
+//#include "Protocol_old.h"
 #include "UnitObject.h"	
 
 using namespace jnet;
 using namespace jgroup;
+
+#define BATTLE_FIELD_ID_INCREMENT 1000
 
 class BattleThread : public JNetGroupThread
 {
@@ -13,7 +15,7 @@ class BattleThread : public JNetGroupThread
 	using TeamID = BYTE;
 
 	const BYTE	INIT_SELECTOR_CNT = 1;
-	const float ACCEPTABLE_POSITION_DIFF = 3.0f;
+	const float ACCEPTABLE_POSITION_DIFF = 10.0f;
 
 private:
 	INT m_NumOfPlayers;
@@ -24,8 +26,8 @@ private:
 	struct PlayerInfo {
 		SessionID64 sessionID;
 		string playerName;
-		enPlayerTeamInBattleField team;
-		BYTE numOfSelectors = 1;
+		enPLAYER_TEAM team;
+		BYTE numOfSelectors;
 		bool entrance = false;
 		bool onBattleField = false;
 	};
@@ -54,7 +56,7 @@ public:
 
 			m_PlayerInfos.insert({ playerInfos[i].first, PlayerInfo {
 				playerInfos[i].first, playerInfos[i].second,
-				(enPlayerTeamInBattleField)i, INIT_SELECTOR_CNT,
+				(enPLAYER_TEAM)i, INIT_SELECTOR_CNT,
 				true, false
 				}});
 		}
@@ -98,14 +100,14 @@ private:
 	void Proc_MSG_C2S_UNIT_S_STOP_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_STOP_ATTACK& msg);
 	void Proc_MSG_C2S_UNIT_S_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_ATTACK& msg);
 
-	void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
-	void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
-	void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
-	void Proc_SYNC_DIRECTION(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg);
-	void Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT_S_REQ_TRACE_PATH_FINDING& msg);
-	void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
-	void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
-	void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);
+	//void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
+	//void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
+	//void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
+	//void Proc_SYNC_DIRECTION(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg);
+	//void Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT_S_REQ_TRACE_PATH_FINDING& msg);
+	//void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
+	//void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
+	//void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);
 
 	void UnicastToPlayer(JBuffer* msg, BYTE team);
 	void BroadcastToPlayerInField(JBuffer* msg, bool battleField, BYTE exceptTeam = -1);
