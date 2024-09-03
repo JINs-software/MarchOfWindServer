@@ -102,16 +102,31 @@ void MatchRoomThread::Proc_MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM(GroupID groupID, 
 	}
 
 	if (existFlag) {
-		JBuffer* playerMsg = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST));
-		MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST* body = playerMsg->DirectReserve<MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST>();
-		body->type = MOW_HUB::S2C_MATCH_PLAYER_LIST;
-		body->PLAYER_ID = msg.PLAYER_ID;
-		memcpy(body->MATCH_PLAYER_NAME, msg.PLAYER_NAME, msg.LENGTH);
-		body->LENGTH = msg.LENGTH;
-		body->MATCH_PLAYER_INDEX = index;
-		body->TOTAL_MATCH_PLAYER = m_PlayerList.size();
+		//JBuffer* playerMsg = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST));
+		//MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST* body = playerMsg->DirectReserve<MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST>();
+		//body->type = MOW_HUB::S2C_MATCH_PLAYER_LIST;
+		//body->PLAYER_ID = msg.PLAYER_ID;
+		//memcpy(body->MATCH_PLAYER_NAME, msg.PLAYER_NAME, msg.LENGTH);
+		//body->LENGTH = msg.LENGTH;
+		//body->MATCH_PLAYER_INDEX = index;
+		//body->TOTAL_MATCH_PLAYER = m_PlayerList.size();
+		//
+		//BroadcastMessageInMatchRoom(playerMsg);
 
-		BroadcastMessageInMatchRoom(playerMsg);
+		int index = 0;
+		for (auto iter = m_PlayerList.begin(); iter != m_PlayerList.end(); iter++) {
+			JBuffer* playerMsg = AllocSerialSendBuff(sizeof(MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST));
+			MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST* body = playerMsg->DirectReserve<MOW_HUB::MSG_S2C_MATCH_PLAYER_LIST>();
+			body->type = MOW_HUB::S2C_MATCH_PLAYER_LIST;
+			body->PLAYER_ID = iter->second.playerID;
+			memcpy(body->MATCH_PLAYER_NAME, iter->second.playerName.data(), iter->second.playerName.size());
+			body->LENGTH = iter->second.playerName.size();
+			body->MATCH_PLAYER_INDEX = index;		// index == total_cnt, 삭제 의미
+			body->TOTAL_MATCH_PLAYER = m_PlayerList.size();
+
+			BroadcastMessageInMatchRoom(playerMsg);
+			index++;
+		}
 	}
 	else {
 		DebugBreak();
@@ -170,6 +185,8 @@ void MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::M
 		}
 	}
 
+	// [MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_START msg)]
+
 	// 게임 시작!!
 	// 1) 로비 스레드에 GAME_START 메시지 전달
 	JBuffer* gameStartMsg = AllocSerialBuff();
@@ -181,10 +198,10 @@ void MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::M
 	for (const auto& p : m_PlayerList) {
 		playerInfos.push_back({ p.first, p.second.playerName });
 	}
-	m_BattleThrd = new BattleThread(m_RoomID + 1000, playerInfos);
-	CreateGroup(m_RoomID + 1000, m_BattleThrd);
+	m_BattleThrd = new BattleThread(m_RoomID + BATTLE_FIELD_ID_INCREMENT, playerInfos);
+	CreateGroup(m_RoomID + BATTLE_FIELD_ID_INCREMENT, m_BattleThrd);
 	for (const auto& p : m_PlayerList) {
-		ForwardSessionToGroup(p.first, m_RoomID + 1000);
+		ForwardSessionToGroup(p.first, m_RoomID + BATTLE_FIELD_ID_INCREMENT);
 	}
 
 	// 3) LAUNCH_MATCH 메시지 브로드캐스팅

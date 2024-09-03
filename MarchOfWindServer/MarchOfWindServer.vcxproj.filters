@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClInclude Include="MOWServer.h" />
     <ClInclude Include="HubThread.h" />
-    <ClInclude Include="Protocol_old.h" />
     <ClInclude Include="Group.h" />
     <ClInclude Include="MatchRoomThread.h" />
     <ClInclude Include="Configuration.h" />
@@ -26,9 +25,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>precomiled</Filter>
     </ClInclude>
-    <ClInclude Include="Protocol_jpd_old.h" />
-    <ClInclude Include="Protocol._jpd_old3h" />
-    <ClInclude Include="Protocol_jpd_old4.h" />
     <ClInclude Include="Protocol.h" />
   </ItemGroup>
   <ItemGroup>
@@ -52,7 +48,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Protocol_old.json" />
     <None Include="Protocol_new.json" />
   </ItemGroup>
   <ItemGroup>

@@ -53,6 +53,17 @@
       ]
     },
     {
+      "Name": "enPLAYER_TEAM",
+      "Field": [
+        "Team_A",
+        "Team_B",
+        "Team_C",
+        "Team_D",
+        "Team_Dummy",
+        "Team_Test"
+      ]
+    },
+    {
       "Name": "enUNIT_TYPE",
       "Fields": [
         "Terran_Marine",
@@ -71,6 +82,13 @@
       "Fields": [
         "MOVE_START",
         "MOVE_STOP"
+      ]
+    },
+    {
+      "Name": "enSPATH_OPT",
+      "Fields": [
+        "PATH",
+        "END_OF_PATH"
       ]
     },
     {
@@ -836,7 +854,28 @@
           "Message": "UNIT_S_LAUNCH_ATTACK",
           "ID": "",
           "Dir": "C2S",
-          "Param": []
+          "Param": [
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            }
+          ]
         },
         {
           "Message": "S_PLAYER_LAUNCH_ATTACK",
@@ -851,6 +890,26 @@
             {
               "Type": "BYTE",
               "Name": "TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
               "FixedLenOfArray": ""
             }
           ]

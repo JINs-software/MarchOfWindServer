@@ -291,18 +291,16 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 			preprePos.x = p.x;
 			preprePos.y = p.y;
 
-			JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
-			MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
-			msg->type = enPacketType::S_MGR_TRACE_SPATH;
-			msg->unitID = unitID;
-			msg->spathID = spathID;
-			msg->posX = p.x / static_cast<float>(PRECISION);
-			msg->posZ = p.y / static_cast<float>(PRECISION);
-			msg->spathState = enSPathStateType::PATH;
+			JBuffer* sendReqMsg = new JBuffer(sizeof(MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH));
+			MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH* body = sendReqMsg->DirectReserve<MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH>();
+			body->type = MOW_BATTLE_FIELD::S2C_S_PLAYER_TRACE_PATH;//enPacketType::S_MGR_TRACE_SPATH;
+			body->UNIT_ID = unitID;
+			body->SPATH_ID = spathID;
+			body->POS_X = p.x / static_cast<float>(PRECISION);
+			body->POS_Z = p.y / static_cast<float>(PRECISION);
+			body->SPATH_OPT = (byte)enSPATH_OPT::PATH;
 
 			PushSendReqMessage(unitID, sendReqMsg);
-
-			
 		}
 
 		// 마지막 노드가 없다면 이를 전송?
@@ -322,27 +320,27 @@ void MoveUpdateThread::TracePathFindingFunc(int unitID, int spathID, const pair<
 	}
 	else {
 		for (const auto& p : pathCandidate) {
-			JBuffer* sendReqMsg = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
-			MSG_S_MGR_TRACE_SPATH* msg = sendReqMsg->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
-			msg->type = enPacketType::S_MGR_TRACE_SPATH;
-			msg->unitID = unitID;
-			msg->spathID = spathID;
-			msg->posX = p.x / static_cast<float>(PRECISION);
-			msg->posZ = p.y / static_cast<float>(PRECISION);
-			msg->spathState = enSPathStateType::PATH;
+			JBuffer* sendReqMsg = new JBuffer(sizeof(MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH));
+			MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH* body = sendReqMsg->DirectReserve<MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH>();
+			body->type = MOW_BATTLE_FIELD::S2C_S_PLAYER_TRACE_PATH;//enPacketType::S_MGR_TRACE_SPATH;
+			body->UNIT_ID = unitID;
+			body->SPATH_ID = spathID;
+			body->POS_X = p.x / static_cast<float>(PRECISION);
+			body->POS_Z = p.y / static_cast<float>(PRECISION);
+			body->SPATH_OPT = (byte)enSPATH_OPT::PATH;
 			
 			PushSendReqMessage(unitID, sendReqMsg);
 		}
 	}
 
-	JBuffer* eopReq = new JBuffer(sizeof(MSG_S_MGR_TRACE_SPATH));
-	MSG_S_MGR_TRACE_SPATH* eopMsg = eopReq->DirectReserve<MSG_S_MGR_TRACE_SPATH>();
-	eopMsg->type = enPacketType::S_MGR_TRACE_SPATH;
-	eopMsg->unitID = unitID;
-	eopMsg->spathID = spathID;
-	eopMsg->posX = 0.f;
-	eopMsg->posZ = 0.f;
-	eopMsg->spathState = enSPathStateType::END_OF_PATH;
+	JBuffer* eopReq = new JBuffer(sizeof(MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH));
+	MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH* eopMsg = eopReq->DirectReserve<MOW_BATTLE_FIELD::MSG_S2C_S_PLAYER_TRACE_PATH>();
+	eopMsg->type = MOW_BATTLE_FIELD::S2C_S_PLAYER_TRACE_PATH;
+	eopMsg->UNIT_ID = unitID;
+	eopMsg->SPATH_ID = spathID;
+	eopMsg->POS_X = 0.f;
+	eopMsg->POS_Z = 0.f;
+	eopMsg->SPATH_OPT = (byte)enSPATH_OPT::END_OF_PATH;
 
 	PushSendReqMessage(unitID, eopReq);
 

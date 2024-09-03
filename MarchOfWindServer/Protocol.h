@@ -45,6 +45,15 @@ enum class enMATCH_ROOM_CLOSE_CODE
     EMPTY_PLAYER,
 };
 
+enum class enPLAYER_TEAM {
+    Team_A,
+    Team_B,
+    Team_C,
+    Team_D,
+    Team_Dummy,
+    Team_Test,
+};
+
 enum class enUNIT_TYPE
 {
     Terran_Marine,
@@ -62,6 +71,12 @@ enum class enMOVE_TYPE
 {
     MOVE_START,
     MOVE_STOP,
+};
+
+enum class enSPATH_OPT 
+{
+    PATH,
+    END_OF_PATH,
 };
 
 enum class enATTACK_TYPE
@@ -419,6 +434,10 @@ namespace MOW_BATTLE_FIELD
 
     struct MSG_C2S_UNIT_S_LAUNCH_ATTACK {
         WORD type;
+        float POS_X;
+        float POS_Z;
+        float NORM_X;
+        float NORM_Z;
     };
 
     struct MSG_S2C_S_PLAYER_LAUNCH_ATTACK
@@ -426,6 +445,10 @@ namespace MOW_BATTLE_FIELD
         WORD type;
         INT UNIT_ID;
         BYTE TEAM;
+        float POS_X;
+        float POS_Z;
+        float NORM_X;
+        float NORM_Z;
     };
 
     struct MSG_C2S_UNIT_S_STOP_ATTACK {

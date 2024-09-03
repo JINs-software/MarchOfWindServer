@@ -10,7 +10,7 @@
 //#include <CGAL/Circle_2.h>
 
 #include "PathFindingWork.h"
-#include "Protocol_old.h"
+#include "Protocol.h"
 
 //typedef CGAL::Simple_cartesian<int> Kernel;	
 //typedef Kernel::Point_2 Point_2;
@@ -21,7 +21,8 @@ using SessionID64 = unsigned long long;
 
 #define M_PI 3.14159
 
-#define JPS_DEBUG
+//#define JPD_MONT
+//#define JPS_DEBUG
 #if defined(JPS_DEBUG)
 extern LockFreeQueue<MSG_S_MONT_JPS_OBSTACLE> g_Obstacles;
 #endif
