@@ -6,9 +6,10 @@ struct UnitInfo {
 	using SessionID64 = unsigned long long ;
 
 	SessionID64 sessionID;
-	int ID;
-	int unitType;
-	int team;
+	INT crtCode;
+	INT ID;
+	BYTE unitType;
+	BYTE team;
 	float posX;
 	float posZ;
 	float normX;
@@ -115,17 +116,20 @@ struct UnitInfo {
 	*/
 
 	bool CanAttack(clock_t clockMs) {
-		clock_t delta = clockMs - timeStamp;
-		timeStamp = clockMs;
+		//clock_t delta = clockMs - timeStamp;
+		//timeStamp = clockMs;
+		//
+		//attackCoolTimeMs -= delta;
+		//
+		//if (attackCoolTimeMs <= 0) {
+		//	attackCoolTimeMs = (1.0f / attackRate) * CLOCKS_PER_SEC;
+		//	return true;
+		//}
+		//
+		//return false;
 
-		attackCoolTimeMs -= delta;
-
-		if (attackCoolTimeMs <= 0) {
-			attackCoolTimeMs = (1.0f / attackRate) * CLOCKS_PER_SEC;
-			return true;
-		}
-
-		return false;
+		// юс╫ц
+		return true;
 	}
 };
 
