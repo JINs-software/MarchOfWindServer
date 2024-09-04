@@ -8,8 +8,8 @@ JNetLibrary의 JNetGroupServer를 상속받은 게임 서버이다. 다양한 �
 Gateway 그룹 스레드는 메시지를 식별하고 세션 정보를 Hub 그룹 스레드로 이동시키고, 닉네임 패킷을 포워딩한다.
 
 <p align="center">
-![connect](https://github.com/user-attachments/assets/089dc6c0-fb03-42b0-a484-c2ab4a1a29b2)
-![접속](https://github.com/user-attachments/assets/6cb9eca4-d859-47e5-9027-c1b205062065)
+  <img src="https://github.com/user-attachments/assets/089dc6c0-fb03-42b0-a484-c2ab4a1a29b2" alt="connect" width="45%">
+  <img src="https://github.com/user-attachments/assets/6cb9eca4-d859-47e5-9027-c1b205062065" alt="접속" width="45%">
 </p>
 
 
