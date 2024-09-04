@@ -24,7 +24,7 @@ Gateway 그룹 스레드는 메시지를 식별하고 세션 정보를 Hub 그�
 3. 초기 화면에서 'Join a Match'를 클릭하면 로비로 이동하게 되고 기존에 생성된 매치룸 리스트를 확인할 수 있다. 접속하고자 하는 매치룸을 클릭하면 입장 패킷을 서버에 송신한다.
 서버의 허브 그룹은 매칭룸 ID를 통한 유효성 확인을 하며, 매치룸 인원을 확인하여 입장이 가능하다면 세션 정보를 전달하면서 동시에 입장 성공 패킷으로 응답한다.
 
-<img src="https://github.com/user-attachments/assets/8b4dced4-b1ca-4d8e-a1fa-5ef5af926cda" alt="join1" width="30%">
+  <img src="https://github.com/user-attachments/assets/8b4dced4-b1ca-4d8e-a1fa-5ef5af926cda" alt="join1" width="30%">
 
 
 4. 매치룸 내 호스트를 제외한 인원이 'READY' 상태이고, 호스트가 'Start' 버튼 클릭 시 게임 시작 요청 패킷을 서버에 전송한다.
