@@ -7,8 +7,10 @@ JNetLibrary의 JNetGroupServer를 상속받은 게임 서버이다. 다양한 �
 서버와의 연결이 수립되면 닉네임 정보를 담은 패킷을 전달한다. 서버는 연결 직후의 클라이언트 패킷을 Gateway 그룹 스레드에 전달한다.
 Gateway 그룹 스레드는 메시지를 식별하고 세션 정보를 Hub 그룹 스레드로 이동시키고, 닉네임 패킷을 포워딩한다.
 
+<p align="center">
 ![connect](https://github.com/user-attachments/assets/089dc6c0-fb03-42b0-a484-c2ab4a1a29b2)
 ![접속](https://github.com/user-attachments/assets/6cb9eca4-d859-47e5-9027-c1b205062065)
+</p>
 
 
 2. 클라이언트가 매치룸 생성 요청 패킷을 송신, 허브 그룹에선 매치룸 중복과 매치룸 생성 제한을 확인하여 생성 가능 시 매치룸 그룹을 생성하고 세션을 전달하며, 성공 응답 패킷을 반환(매치룸 그룹 스레드)한다.
