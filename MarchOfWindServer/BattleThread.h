@@ -7,14 +7,15 @@
 using namespace jnet;
 using namespace jgroup;
 
-#define BATTLE_FIELD_ID_INCREMENT 1000
+#define BATTLE_FIELD_ID_INCREMENT	1000
+#define ARC_MAX_HP					500
 
 class BattleThread : public JNetGroupThread
 {
 	using UnitID = INT;
 	using TeamID = BYTE;
 
-	const BYTE	INIT_SELECTOR_CNT = 1;
+	const BYTE	INIT_SELECTOR_CNT = 3;
 	const float ACCEPTABLE_POSITION_DIFF = 10.0f;
 
 private:
@@ -31,9 +32,13 @@ private:
 		bool entrance = false;
 		bool onBattleField = false;
 	};
+	struct ArcInfo {
+		INT arcMaxHP = ARC_MAX_HP;
+		INT arcHP = ARC_MAX_HP;
+	};
 
 	std::map<SessionID64, PlayerInfo>	m_PlayerInfos;
-	std::map<int, PlayerInfo>			m_TeamToPlayerInfoMap;
+	std::map<BYTE, ArcInfo>			m_ArcInfos;
 
 	std::map<SessionID64, UnitObject*>	m_UnitSessionObjMap;
 	std::map<UnitID, UnitObject*>	m_UnitIDObjMap;
@@ -54,11 +59,17 @@ public:
 		for (BYTE i = 0; i < playerInfos.size(); i++) {
 			SessionID64 sessionID = playerInfos[i].first;
 
-			m_PlayerInfos.insert({ playerInfos[i].first, PlayerInfo {
+			PlayerInfo playerInfo = PlayerInfo{
 				playerInfos[i].first, playerInfos[i].second,
 				(enPLAYER_TEAM)i, INIT_SELECTOR_CNT,
 				true, false
-				}});
+			};
+			m_PlayerInfos.insert({ playerInfos[i].first, PlayerInfo{
+				playerInfos[i].first, playerInfos[i].second,
+				(enPLAYER_TEAM)i, INIT_SELECTOR_CNT,
+				true, false
+			} });
+			m_ArcInfos.insert({ i, ArcInfo{} });
 		}
 	}
 
@@ -99,24 +110,19 @@ private:
 	void Proc_MSG_C2S_UNIT_S_LAUNCH_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_LAUNCH_ATTACK& msg);
 	void Proc_MSG_C2S_UNIT_S_STOP_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_STOP_ATTACK& msg);
 	void Proc_MSG_C2S_UNIT_S_ATTACK(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_ATTACK& msg);
-
-	//void Proc_CREATE_UNIT(SessionID64 sessionID, MSG_UNIT_S_CREATE_UNIT& msg);
-	//void Proc_MOVE_UNIT(SessionID64 sessionID, MSG_UNIT_S_MOVE& msg);
-	//void Proc_SYNC_POSITION(SessionID64 sessionID, MSG_UNIT_S_SYNC_POSITION& msg);
-	//void Proc_SYNC_DIRECTION(SessionID64 sessionID, MSG_UNIT_S_SYNC_DIRECTION& msg);
-	//void Proc_REQ_TRACING_PATH_FINDING(SessionID64 sessionID, MSG_UNIT_S_REQ_TRACE_PATH_FINDING& msg);
-	//void Proc_ATTACK(SessionID64 sessionID, MSG_UNIT_S_ATTACK& msg);
-	//void Proc_ATTACK_STOP(SessionID64 sessionID, MSG_UNIT_S_ATTACK_STOP& msg);
-	//void Proc_UNIT_DIE_REQUEST(SessionID64 sessionID, MSG_MGR_UNIT_DIE_REQUEST& msg);
+	void Proc_MSG_C2S_UNIT_S_ATTACK_ARC(SessionID64 sessionID, MOW_BATTLE_FIELD::MSG_C2S_UNIT_S_ATTACK_ARC& msg);
 
 	void UnicastToPlayer(JBuffer* msg, BYTE team);
 	void BroadcastToPlayerInField(JBuffer* msg, bool battleField, BYTE exceptTeam = -1);
 	void BroadcastToPlayer(JBuffer* msg, BYTE exceptTeam = -1);
 
+	void SendArcsHP(SessionID64 sessionID);
 	void SendExistingUnits(SessionID64 sessionID);
 
 	void Attack(SessionID64 sessionID, UnitInfo* attacker, const pair<float, float>& attackerPos, UnitInfo* target, int attackType);
+	void AttackArc(SessionID64 sessionID, UnitInfo* attacker, const pair<float, float>& attackerPos, BYTE arcTeam, int attackType);
 	void Damage(UnitInfo* target, int damage);
+	void DamageArc(BYTE arcTeam, int damage);
 
 	inline float GetDistance(float x, float z, float tx, float tz) {
 		return sqrt(pow(x - tx, 2) + pow(z - tz, 2));

@@ -38,6 +38,7 @@ void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_SERVER::MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM msg;
 			recvData >> msg;
 			Proc_MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM(sessionID, msg);
+			cout << "MatchRoomThread::Proc_MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_QUIT_FROM_MATCH_ROOM:
@@ -45,6 +46,7 @@ void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_QUIT_FROM_MATCH_ROOM msg;
 			recvData >> msg;
 			Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(sessionID, msg);
+			cout << "MatchRoomThread::Proc_MSG_C2S_QUIT_FROM_MATCH_ROOM(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_MATCH_START:
@@ -52,6 +54,7 @@ void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_MATCH_START msg;
 			recvData >> msg;
 			Proc_MSG_C2S_MATCH_START(sessionID, msg);
+			cout << "MatchRoomThread::Proc_MSG_C2S_MATCH_START(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_MATCH_READY:
@@ -59,6 +62,7 @@ void MatchRoomThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_MATCH_READY msg;
 			recvData >> msg;
 			Proc_MSG_C2S_MATCH_READY(sessionID, msg);
+			cout << "MatchRoomThread::Proc_MSG_C2S_MATCH_READY(" << sessionID << ")" << endl;
 		}
 		break;
 		}
@@ -187,6 +191,8 @@ void MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::M
 
 	// [MatchRoomThread::Proc_MSG_C2S_MATCH_START(SessionID64 sessionID, MOW_HUB::MSG_C2S_MATCH_START msg)]
 
+	cout << "[BATTLE START!!] BattleFieldID: " << m_RoomID + BATTLE_FIELD_ID_INCREMENT << endl;
+
 	// 게임 시작!!
 	// 1) 로비 스레드에 GAME_START 메시지 전달
 	JBuffer* gameStartMsg = AllocSerialBuff();
@@ -231,6 +237,8 @@ void MatchRoomThread::Proc_MSG_C2S_MATCH_READY(SessionID64 sessionID, MOW_HUB::M
 		MOW_HUB::MSG_S2C_MATCH_READY_REPLY* body = readyMsg->DirectReserve<MOW_HUB::MSG_S2C_MATCH_READY_REPLY>();
 		body->type = MOW_HUB::S2C_MATCH_READY_REPLY;
 		body->PLAYER_ID = readyPlayerID;
+
+		cout << "[READY] SessionID: " << sessionID << ", PlayerID: " << readyPlayerID << endl;
 
 		BroadcastMessageInMatchRoom(readyMsg);
 	}

@@ -31,7 +31,14 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		break;
 		default:
 		{
-			DebugBreak();
+			//DebugBreak();
+			// => 세션 포워딩을 하더라도 다른 그룹에서 처리될 메시지가 이미 해당 스레드 그룹의
+			// 메시지 큐에 들어올 경우 이를 포워딩 해주어야 함.
+			JBuffer* msg = AllocSerialBuff();
+			//recvData.Dequeue(msg->GetBeginBufferPtr(), recvData.GetUseSize());
+			msg->Enqueue(recvData.GetDequeueBufferPtr(), recvData.GetUseSize());
+			recvData.DirectMoveDequeueOffset(recvData.GetUseSize());
+			ForwardSessionMessage(sessionID, msg);
 		}
 		break;
 		}

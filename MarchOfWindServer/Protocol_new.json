@@ -511,6 +511,28 @@
           ]
         },
         {
+          "Message": "S_PLAYER_ARC_INFO",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "MAX_HP",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "HP",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
           "Message": "UNIT_S_CREATE",
           "ID": "",
           "Dir": "C2S",
@@ -1022,6 +1044,90 @@
           ]
         },
         {
+          "Message": "UNIT_S_ATTACK_ARC",
+          "ID": "",
+          "Dir": "C2S",
+          "Param": [
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ARC_TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_ATTACK_ARC",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "INT",
+              "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "POS_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_X",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "float",
+              "Name": "NORM_Z",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ARC_TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "BYTE",
+              "Name": "ATTACK_TYPE",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
           "Message": "S_PLAYER_DAMAGE",
           "ID": "",
           "Dir": "S2C",
@@ -1039,6 +1145,23 @@
           ]
         },
         {
+          "Message": "S_PLAYER_DAMAGE_ARC",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "ARC_TEAM",
+              "FixedLenOfArray": ""
+            },
+            {
+              "Type": "INT",
+              "Name": "HP",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
           "Message": "S_PLAYER_DIE",
           "ID": "",
           "Dir": "S2C",
@@ -1046,6 +1169,18 @@
             {
               "Type": "INT",
               "Name": "UNIT_ID",
+              "FixedLenOfArray": ""
+            }
+          ]
+        },
+        {
+          "Message": "S_PLAYER_ARC_DESTROY",
+          "ID": "",
+          "Dir": "S2C",
+          "Param": [
+            {
+              "Type": "BYTE",
+              "Name": "ARC_TEAM",
               "FixedLenOfArray": ""
             }
           ]

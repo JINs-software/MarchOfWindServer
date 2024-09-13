@@ -35,6 +35,7 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_CONNECTION msg;
 			recvData >> msg;
 			Proc_MSG_C2S_CONNECTION(sessionID, msg);
+			cout << "HubThread::Proc_MSG_C2S_CONNECTION(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_CREATE_MATCH_ROOM:
@@ -42,6 +43,7 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_CREATE_MATCH_ROOM msg;
 			recvData >> msg;
 			Proc_MSG_C2S_CREATE_MATCH_ROOM(sessionID, msg);
+			cout << "HubThread::Proc_MSG_C2S_CREATE_MATCH_ROOM(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_ENTER_TO_ROBBY:
@@ -49,6 +51,7 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_ENTER_TO_ROBBY msg;
 			recvData >> msg;
 			Proc_MSG_C2S_ENTER_TO_ROBBY(sessionID, msg);
+			cout << "HubThread::Proc_MSG_C2S_ENTER_TO_ROBBY(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_QUIT_FROM_ROBBY:
@@ -56,6 +59,7 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_QUIT_FROM_ROBBY msg;
 			recvData >> msg;
 			Proc_MSG_C2S_QUIT_FROM_ROBBY(sessionID, msg);
+			cout << "HubThread::Proc_MSG_C2S_QUIT_FROM_ROBBY(" << sessionID << ")" << endl;
 		}
 		break;
 		case MOW_HUB::C2S_JOIN_TO_MATCH_ROOM:
@@ -63,11 +67,17 @@ void HubThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 			MOW_HUB::MSG_C2S_JOIN_TO_MATCH_ROOM msg;
 			recvData >> msg;
 			Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(sessionID, msg);
+			cout << "HubThread::Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(" << sessionID << ")" << endl;
 		}
 		break;
 		default:
 		{
-			DebugBreak();
+			//DebugBreak();
+
+			JBuffer* msg = AllocSerialBuff();
+			msg->Enqueue(recvData.GetDequeueBufferPtr(), recvData.GetUseSize());
+			recvData.DirectMoveDequeueOffset(recvData.GetUseSize());
+			ForwardSessionMessage(sessionID, msg);
 		}
 		break;
 		}
@@ -152,6 +162,8 @@ void HubThread::Proc_MSG_C2S_CONNECTION(SessionID64 sessionID, MOW_HUB::MSG_C2S_
 	m_PlayerNameIDMap.insert({ playerName, playerID });
 	m_PlayerIDNameMap.insert({ playerID, playerName });
 
+	cout << "[CONNECTION SUCCESS] SessionID: " << sessionID << ", PlayerID: " << playerID << ", NAME : " << playerName << endl;
+
 	body->REPLY_CODE = (BYTE)enCONNECTION_REPLY_CODE::SUCCESS;
 	body->PLAYER_ID = playerID;
 	if (!SendPacket(sessionID, reply)) {
@@ -214,6 +226,8 @@ void HubThread::Proc_MSG_C2S_CREATE_MATCH_ROOM(SessionID64 sessionID, MOW_HUB::M
 	m_MatchRoomIdInfoMap[matchRoomID].players.insert(sessionID);
 	m_MatchRoomIdInfoMap[matchRoomID].matchRoomThread = matchRoomThrd;
 	m_MatchRoomList.push_back(matchRoomID);
+
+	cout << "[CREATE MATCH ROOM SUCCESS] SessionID: " << sessionID << ", MatchRoomID: " << matchRoomID << ", NAME : " << matchRoomName << ", NumOfPlayers : " << msg.NUM_OF_PARTICIPANTS << endl;
 
 	// 그룹 ID는 매치룸 ID와 동일하게 지정
 	CreateGroup(matchRoomID, matchRoomThrd);
@@ -278,20 +292,16 @@ void HubThread::Proc_MSG_C2S_JOIN_TO_MATCH_ROOM(SessionID64 sessionID, const MOW
 	matchRoomInfo.players.insert(sessionID);		// 플레이어 추가
 	m_PlayerSessionInLobby.erase(sessionID);		// 로비 대기 유저에서 제외
 
+	cout << "[JOIN TO MATCH ROOM SUCCESS] SessionID: " << sessionID << ", MatchRoomID: " << msg.MATCH_ROOM_ID << endl;
+
 	ForwardSessionToGroup(sessionID, msg.MATCH_ROOM_ID);
 
 	PlayerID playerID = m_SessionPlayerIdMap[sessionID];
 	string playerName = m_PlayerIDNameMap[playerID];
 	JBuffer* registMsg = AllocSerialBuff();
-	//(*registMsg) << MOW_SERVER::S2S_REGIST_PLAYER_TO_MATCH_ROOM;
-	//(*registMsg) << sessionID;
-	//(*registMsg).Enqueue((BYTE*)playerName.data(), playerName.length());
-	//(*registMsg) << (BYTE)playerName.length();
-	//(*registMsg) << playerID;
 	MOW_SERVER::MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM* body = registMsg->DirectReserve<MOW_SERVER::MSG_S2S_REGIST_PLAYER_TO_MATCH_ROOM>();
 	body->type = MOW_SERVER::S2S_REGIST_PLAYER_TO_MATCH_ROOM;
 	body->SESSION_ID = sessionID;
-	//body->PLAYER_NAME
 	memcpy(&body->PLAYER_NAME, playerName.data(), playerName.length());
 	body->LENGTH = playerName.length();
 	body->PLAYER_ID = playerID;

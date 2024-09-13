@@ -306,22 +306,27 @@ namespace MOW_BATTLE_FIELD
 {
     static const WORD C2S_ENTER_TO_BATTLE_FIELD = 3000;
     static const WORD C2S_UNIT_CONN_TO_BATTLE_FIELD = 3001;
-    static const WORD C2S_UNIT_S_CREATE = 3002;
-    static const WORD S2C_S_PLAYER_CREATE = 3003;
-    static const WORD C2S_UNIT_S_MOVE = 3004;
-    static const WORD S2C_S_PLAYER_MOVE = 3005;
-    static const WORD C2S_UNIT_S_SYNC_POSITION = 3006;
-    static const WORD C2S_UNIT_S_TRACE_PATH_FINDING_REQ = 3007;
-    static const WORD S2C_S_PLAYER_TRACE_PATH_FINDING_REPLY = 3008;
-    static const WORD S2C_S_PLAYER_TRACE_PATH = 3009;
-    static const WORD C2S_UNIT_S_LAUNCH_ATTACK = 3010;
-    static const WORD S2C_S_PLAYER_LAUNCH_ATTACK = 3011;
-    static const WORD C2S_UNIT_S_STOP_ATTACK = 3012;
-    static const WORD S2C_S_PLAYER_STOP_ATTACK = 3013;
-    static const WORD C2S_UNIT_S_ATTACK = 3014;
-    static const WORD S2C_S_PLAYER_ATTACK = 3015;
-    static const WORD S2C_S_PLAYER_DAMAGE = 3016;
-    static const WORD S2C_S_PLAYER_DIE = 3017;
+    static const WORD S2C_S_PLAYER_ARC_INFO = 3002;
+    static const WORD C2S_UNIT_S_CREATE = 3003;
+    static const WORD S2C_S_PLAYER_CREATE = 3004;
+    static const WORD C2S_UNIT_S_MOVE = 3005;
+    static const WORD S2C_S_PLAYER_MOVE = 3006;
+    static const WORD C2S_UNIT_S_SYNC_POSITION = 3007;
+    static const WORD C2S_UNIT_S_TRACE_PATH_FINDING_REQ = 3008;
+    static const WORD S2C_S_PLAYER_TRACE_PATH_FINDING_REPLY = 3009;
+    static const WORD S2C_S_PLAYER_TRACE_PATH = 3010;
+    static const WORD C2S_UNIT_S_LAUNCH_ATTACK = 3011;
+    static const WORD S2C_S_PLAYER_LAUNCH_ATTACK = 3012;
+    static const WORD C2S_UNIT_S_STOP_ATTACK = 3013;
+    static const WORD S2C_S_PLAYER_STOP_ATTACK = 3014;
+    static const WORD C2S_UNIT_S_ATTACK = 3015;
+    static const WORD S2C_S_PLAYER_ATTACK = 3016;
+    static const WORD C2S_UNIT_S_ATTACK_ARC = 3017;
+    static const WORD S2C_S_PLAYER_ATTACK_ARC = 3018;
+    static const WORD S2C_S_PLAYER_DAMAGE = 3019;
+    static const WORD S2C_S_PLAYER_DAMAGE_ARC = 3020;
+    static const WORD S2C_S_PLAYER_DIE = 3021;
+    static const WORD S2C_S_PLAYER_ARC_DESTROY = 3022;
 
 #pragma pack(push, 1)
 
@@ -333,6 +338,14 @@ namespace MOW_BATTLE_FIELD
     {
         WORD type;
         UINT16 BATTLE_FIELD_ID;
+    };
+
+    struct MSG_S2C_S_PLAYER_ARC_INFO 
+    {
+        WORD type;
+        BYTE TEAM;
+        INT MAX_HP;
+        INT HP;
     };
 
     struct MSG_C2S_UNIT_S_CREATE
@@ -486,6 +499,30 @@ namespace MOW_BATTLE_FIELD
         BYTE ATTACK_TYPE;
     };
 
+    struct MSG_C2S_UNIT_S_ATTACK_ARC
+    {
+        WORD type;
+        float POS_X;
+        float POS_Z;
+        float NORM_X;
+        float NORM_Z;
+        BYTE ARC_TEAM;
+        BYTE ATTACK_TYPE;
+    };
+
+    struct MSG_S2C_S_PLAYER_ATTACK_ARC
+    {
+        WORD type;
+        INT UNIT_ID;
+        BYTE TEAM;
+        float POS_X;
+        float POS_Z;
+        float NORM_X;
+        float NORM_Z;
+        BYTE ARC_TEAM;
+        BYTE ATTACK_TYPE;
+    };
+
     struct MSG_S2C_S_PLAYER_DAMAGE
     {
         WORD type;
@@ -493,10 +530,23 @@ namespace MOW_BATTLE_FIELD
         INT HP;
     };
 
+    struct MSG_S2C_S_PLAYER_DAMAGE_ARC 
+    {
+        WORD type;
+        BYTE ARC_TEAM;
+        INT HP;
+    };
+
     struct MSG_S2C_S_PLAYER_DIE
     {
         WORD type;
         INT UNIT_ID;
+    };
+
+    struct MSG_S2C_S_PLAYER_ARC_DESTROY
+    {
+        WORD type;
+        BYTE ARC_TEAM;
     };
 
 #pragma pack(pop)
