@@ -1,6 +1,13 @@
 ### \[개요\]
 JNetLibrary의 JNetGroupServer를 상속받은 게임 서버이다. 다양한 그룹 스레드를 만들기 위해 로비와 매치룸이 존재하는 게임을 선택하고자 하였고, 더미보다는 소수의 인원으로 비교적 더 많은 클라이언트 세션을 테스트 할 수 있는 RTS 장르를 선택하였다. 여러 유닛을 하나의 클라이언트로 제어할 수 있기에 개별 유닛에 네트워크 세션을 붙여 행위(공격, 이동, 동기화) 패킷을 독립적으로 서버에 송신하는 방식을 사용하였다.
 
+### 간단 시연 영상
+
+<p align="center">
+<img src="https://github.com/user-attachments/assets/60b5345a-e0ec-4e63-a920-9549a03c3d97" width="800">
+https://www.youtube.com/watch?v=5YbUqW7MBsM
+</p>
+
 ### \[HubThread, MatchRoomThread\]
 
 1. 클라이언트는 게임 접속 시 초기 화면(이하 Hub 창)에 게임 서버의 IP/Port 번호를 입력하고 닉네임을 전달함. 본 서버는 계정을 관리하지 않음. 일회성의 닉네임을 사용한다.
