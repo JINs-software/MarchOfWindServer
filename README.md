@@ -1,6 +1,31 @@
 ### \[개요\]
 JNetLibrary의 JNetGroupServer를 상속받은 게임 서버이다. 다양한 그룹 스레드를 만들기 위해 로비와 매치룸이 존재하는 게임을 선택하고자 하였고, 더미보다는 소수의 인원으로 비교적 더 많은 클라이언트 세션을 테스트 할 수 있는 RTS 장르를 선택하였다. 여러 유닛을 하나의 클라이언트로 제어할 수 있기에 개별 유닛에 네트워크 세션을 붙여 행위(공격, 이동, 동기화) 패킷을 독립적으로 서버에 송신하는 방식을 사용하였다.
 
+<p align="center">
+<img src="https://github.com/user-attachments/assets/a62e394e-0d07-4cc2-84a1-9226b92c14cb" width="800">
+</p>
+
+#### 그룹 스레드 활용: Hub group / MatchRoom group / battlefield group
+
+<p align="center">
+<img src="https://github.com/user-attachments/assets/452fac0e-2772-4ca9-af1a-cfa1e4ce00ef" width="1000">
+</p>
+
+* 클라이언트의 초기 연결과 매치룸 생성, 로비 및 매치룸 입장, 그리고 게임 시작 전까지 Hub 그룹(스레드)과 MatchRoom 그룹가 관장
+* 유닛 선택 필드에서 유닛이 생성할 때 유닛은 각각 개별 세션으로써 서버에 연결됩니다. 유닛 이동 및 공격 시 각자의 상태 함수를 통해 이동/공격 패킷등을 송신
+
+#### 비트 연산/마스킹을 적용한 빠른 JPS 알고리즘 라이브러리 활용
+
+<p align="center">
+<img src="https://github.com/user-attachments/assets/695f1df8-0dd8-464f-b50a-d8320991a098" width="600">
+</p>
+
+* 비트 연산, 마스킹을 활용한 JPS(Jump Point Search) 길찾기 알고리즘을 구현한 라이브러리를 활용
+* 유닛의 경로가 막혀 제자리 걸음을 할 때 서버에 JPS 요청을 보내 경로를 가로막은 다른 유닛을 회피할 수 있도록 로직을 구현
+* https://github.com/JINs-software/PathFinderLibrary
+
+----
+
 ### 간단 시연 영상
 
 <p align="center">
