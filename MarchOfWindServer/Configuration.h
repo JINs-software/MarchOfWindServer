@@ -1,16 +1,6 @@
 #pragma once
 
-//MOWServer(
-//	const char* serverIP, uint16 serverPort, uint16 maximumOfConnections,
-//	BYTE packetCode_LAN, BYTE packetCode, BYTE packetSymmetricKey,
-//	bool recvBufferingMode,
-//	uint16 maximumOfSessions,
-//	uint32 numOfIocpConcurrentThrd, uint16 numOfIocpWorkerThrd,
-//	size_t tlsMemPoolUnitCnt, size_t tlsMemPoolUnitCapacity,
-//	bool tlsMemPoolMultiReferenceMode, bool tlsMemPoolPlacementNewMode,
-//	uint32 memPoolBuffAllocSize,
-//	uint32 sessionRecvBuffSize
-//);
+//#define TOKEN_CHECK
 
 #define MOW_SERVER_IP						NULL
 #define MOW_SERVER_PORT						7777

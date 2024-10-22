@@ -2,8 +2,21 @@
 #include "Group.h"
 #include "HubThread.h"
 #include "BattleThread.h"
-
 #include "Protocol.h"
+
+#if defined(TOKEN_CHECK)
+#include "CRedisConn.h"
+#endif
+
+void GatewayThread::OnStart()
+{
+#if defined(TOKEN_CHECK)
+	m_RedisConn = new RedisCpp::CRedisConn();
+	if (m_RedisConn == NULL) {
+		DebugBreak();
+	}
+#endif
+}
 
 void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 {
@@ -14,6 +27,12 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		switch (type) {
 		case MOW_HUB::C2S_CONNECTION:
 		{
+#if defined(TOKEN_CHECK) 
+			recvData.DirectMoveDequeueOffset(sizeof(type));
+			if (!TokenCheck(recvData)) {
+				continue;
+			}
+#endif
 			ForwardSessionToGroup(sessionID, LOBBY_GROUP);
 
 			JBuffer* connMsg = AllocSerialBuff();
@@ -44,3 +63,21 @@ void GatewayThread::OnMessage(SessionID64 sessionID, JBuffer& recvData)
 		}
 	}
 }
+
+#if defined(TOKEN_CHECK)
+bool GatewayThread::TokenCheck(JBuffer& tokenBuffer)
+{
+	uint16 accountNo;
+	int len;
+	WCHAR Tokens[TOKEN_LEN] = { NULL, };
+	
+	tokenBuffer >> accountNo;
+	tokenBuffer >> len;
+	tokenBuffer.Dequeue((BYTE*)Tokens, len * sizeof(WCHAR));
+	wstring wtoken(Tokens);
+	string token;
+	token.assign(wtoken.begin(), wtoken.end());
+
+	return m_RedisConn->get(to_string(accountNo), token);
+}
+#endif
